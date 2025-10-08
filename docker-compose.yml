@@ -1,0 +1,205 @@
+# ==========================================
+# CeciAI - Docker Compose
+# Configuração completa para desenvolvimento e produção
+# ==========================================
+
+version: '3.9'
+
+services:
+  # ========== Aplicação Principal ==========
+  ceciai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: ceciai:latest
+    container_name: ceciai-app
+    restart: unless-stopped
+    
+    # Recursos (ajustar conforme hardware)
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'      # Ryzen 5800X tem 8 cores
+          memory: 8G       # 32GB total, usar 8GB
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+    
+    # Variáveis de ambiente
+    environment:
+      - ENV=production
+      - LOG_LEVEL=INFO
+      - PYTHONOPTIMIZE=2
+      
+      # CoinAPI
+      - COINAPI_KEY=${COINAPI_KEY}
+      - COINAPI_MODE=${COINAPI_MODE:-development}
+      
+      # Ollama
+      - OLLAMA_HOST=${OLLAMA_HOST:-http://ollama:11434}
+      - OLLAMA_MODEL_PRIMARY=llama3:8b
+      - OLLAMA_MODEL_CODE=codellama:7b
+      
+      # Trading
+      - INITIAL_CAPITAL=${INITIAL_CAPITAL:-10000}
+      - MAX_DAILY_LOSS=0.03
+      - MAX_POSITION_SIZE=0.20
+      - ENABLE_TRADING=${ENABLE_TRADING:-false}
+      
+      # GPU (se disponível)
+      - CUDA_VISIBLE_DEVICES=0
+    
+    # Volumes persistentes
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config:/app/config
+    
+    # Rede
+    networks:
+      - ceciai-network
+    
+    # Dependências
+    depends_on:
+      ollama:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ========== Ollama (LLM Local) ==========
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ceciai-ollama
+    restart: unless-stopped
+    
+    # GPU Support (descomentar se tiver GPU)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    
+    volumes:
+      - ollama-data:/root/.ollama
+    
+    ports:
+      - "11434:11434"
+    
+    networks:
+      - ceciai-network
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ========== Redis (Cache) ==========
+  redis:
+    image: redis:7.2-alpine
+    container_name: ceciai-redis
+    restart: unless-stopped
+    
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
+    
+    volumes:
+      - redis-data:/data
+    
+    ports:
+      - "6379:6379"
+    
+    networks:
+      - ceciai-network
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ========== PostgreSQL (Histórico de Trades - Opcional) ==========
+  postgres:
+    image: postgres:16-alpine
+    container_name: ceciai-postgres
+    restart: unless-stopped
+    
+    environment:
+      - POSTGRES_DB=ceciai
+      - POSTGRES_USER=ceciuser
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+    
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    
+    ports:
+      - "5432:5432"
+    
+    networks:
+      - ceciai-network
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ceciuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ========== Dashboard (Opcional) ==========
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: ceciai:latest
+    container_name: ceciai-dashboard
+    restart: unless-stopped
+    
+    command: python dashboard.py
+    
+    environment:
+      - ENV=production
+      - REDIS_HOST=redis
+      - POSTGRES_HOST=postgres
+    
+    volumes:
+      - ./logs:/app/logs
+    
+    ports:
+      - "8050:8050"
+    
+    networks:
+      - ceciai-network
+    
+    depends_on:
+      - redis
+      - postgres
+
+# ========== Volumes ==========
+volumes:
+  ollama-data:
+    driver: local
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+
+# ========== Networks ==========
+networks:
+  ceciai-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

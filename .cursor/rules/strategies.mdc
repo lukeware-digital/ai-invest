@@ -1,0 +1,512 @@
+# @strategies - Regras para Estratégias de Trading
+
+## 🎯 Contexto
+Você está trabalhando nas **estratégias de trading** do CeciAI.
+
+## 📊 Estratégias Implementadas
+
+1. **Scalping** - Operações de 5-30 minutos
+2. **Swing Trading** - Operações de 1-7 dias
+3. **Arbitrage** - Oportunidades entre pares/exchanges
+
+## 🏗️ Arquitetura Base
+
+```python
+"""
+Base strategy class that all strategies must inherit from.
+"""
+
+from abc import ABC, abstractmethod
+from typing import Dict, Any, Optional
+import logging
+
+logger = logging.getLogger("CeciAI.Strategy")
+
+class BaseStrategy(ABC):
+    """
+    Abstract base class for all trading strategies.
+    """
+    
+    # Strategy metadata (override in subclass)
+    NAME = "Base Strategy"
+    TIMEFRAME = "1h"
+    HOLD_TIME = "variable"
+    MIN_VOLATILITY = 0.0
+    MAX_VOLATILITY = 100.0
+    
+    def __init__(self, risk_manager):
+        self.risk_manager = risk_manager
+        self.active_positions = []
+        logger.info(f"{self.NAME} initialized")
+    
+    @abstractmethod
+    def should_enter(self, data: Dict[str, Any]) -> bool:
+        """
+        Determine if should enter a trade.
+        
+        Args:
+            data: Market data and indicators
+            
+        Returns:
+            True if should enter, False otherwise
+        """
+        pass
+    
+    @abstractmethod
+    def calculate_position_size(self, data: Dict[str, Any]) -> float:
+        """
+        Calculate position size based on risk.
+        
+        Args:
+            data: Market data
+            
+        Returns:
+            Position size (0.0 to 1.0 of capital)
+        """
+        pass
+    
+    @abstractmethod
+    def set_stop_loss(self, entry_price: float, data: Dict[str, Any]) -> float:
+        """
+        Calculate stop loss price.
+        
+        Args:
+            entry_price: Entry price
+            data: Market data
+            
+        Returns:
+            Stop loss price
+        """
+        pass
+    
+    @abstractmethod
+    def set_take_profit(self, entry_price: float, data: Dict[str, Any]) -> float:
+        """
+        Calculate take profit price.
+        
+        Args:
+            entry_price: Entry price
+            data: Market data
+            
+        Returns:
+            Take profit price
+        """
+        pass
+    
+    def validate_trade(self, trade: Dict[str, Any]) -> bool:
+        """
+        Validate trade against risk parameters.
+        
+        Args:
+            trade: Trade details
+            
+        Returns:
+            True if trade is valid, False otherwise
+        """
+        return self.risk_manager.validate_trade(trade)
+    
+    def execute_trade(self, symbol: str, side: str, data: Dict[str, Any]) -> Optional[Dict]:
+        """
+        Execute a trade with full validation.
+        
+        Args:
+            symbol: Trading pair
+            side: "buy" or "sell"
+            data: Market data
+            
+        Returns:
+            Trade execution result or None if invalid
+        """
+        try:
+            # Check if should enter
+            if not self.should_enter(data):
+                logger.info(f"{self.NAME}: Entry conditions not met")
+                return None
+            
+            # Calculate position size
+            position_size = self.calculate_position_size(data)
+            
+            # Calculate stop loss and take profit
+            entry_price = data['current_price']
+            stop_loss = self.set_stop_loss(entry_price, data)
+            take_profit = self.set_take_profit(entry_price, data)
+            
+            # Build trade
+            trade = {
+                "strategy": self.NAME,
+                "symbol": symbol,
+                "side": side,
+                "entry_price": entry_price,
+                "position_size": position_size,
+                "stop_loss": stop_loss,
+                "take_profit": take_profit,
+                "risk_reward_ratio": abs((take_profit - entry_price) / (entry_price - stop_loss))
+            }
+            
+            # Validate with risk manager
+            if not self.validate_trade(trade):
+                logger.warning(f"{self.NAME}: Trade failed risk validation")
+                return None
+            
+            logger.info(f"{self.NAME}: Trade validated and ready for execution")
+            return trade
+            
+        except Exception as e:
+            logger.error(f"{self.NAME}: Trade execution error: {e}")
+            return None
+```
+
+## 🔥 Estratégia 1: Scalping
+
+```python
+"""
+Scalping strategy for short-term trades (5-30 minutes).
+"""
+
+from strategies.base_strategy import BaseStrategy
+from typing import Dict, Any
+
+class ScalpingStrategy(BaseStrategy):
+    """
+    High-frequency scalping strategy.
+    
+    Entry Conditions:
+    - High volume (> 5M USD)
+    - Tight spreads (< 0.1%)
+    - RSI between 30-70
+    - Bollinger Bands squeeze
+    
+    Exit:
+    - Quick profit (0.5-1%)
+    - Tight stop loss (0.3%)
+    """
+    
+    NAME = "Scalping"
+    TIMEFRAME = "1min"
+    HOLD_TIME = "5-30min"
+    MIN_VOLATILITY = 1.5
+    MAX_VOLATILITY = 8.0
+    
+    def should_enter(self, data: Dict[str, Any]) -> bool:
+        """Check scalping entry conditions"""
+        
+        # Volume check
+        if data.get('volume_24h', 0) < 5_000_000:
+            return False
+        
+        # Spread check
+        spread = data.get('spread_percent', 1.0)
+        if spread > 0.1:
+            return False
+        
+        # RSI check (avoid overbought/oversold)
+        rsi = data.get('rsi', 50)
+        if rsi < 30 or rsi > 70:
+            return False
+        
+        # Bollinger Bands squeeze (volatility)
+        bb_width = data.get('bb_width', 0)
+        if bb_width < 0.01:  # Too tight
+            return False
+        
+        # Trend alignment
+        ema_fast = data.get('ema_9', 0)
+        ema_slow = data.get('ema_21', 0)
+        current_price = data.get('current_price', 0)
+        
+        # Buy signal: price above EMAs and EMAs aligned
+        if data.get('side') == 'buy':
+            return current_price > ema_fast > ema_slow
+        
+        # Sell signal: price below EMAs
+        if data.get('side') == 'sell':
+            return current_price < ema_fast < ema_slow
+        
+        return False
+    
+    def calculate_position_size(self, data: Dict[str, Any]) -> float:
+        """Calculate position size for scalping"""
+        # Conservative: 10% of capital per trade
+        base_size = 0.10
+        
+        # Adjust based on volatility
+        volatility = data.get('volatility', 2.0)
+        if volatility > 5.0:
+            base_size *= 0.5  # Reduce size in high volatility
+        
+        return base_size
+    
+    def set_stop_loss(self, entry_price: float, data: Dict[str, Any]) -> float:
+        """Set tight stop loss for scalping"""
+        # 0.3% stop loss
+        side = data.get('side', 'buy')
+        
+        if side == 'buy':
+            return entry_price * 0.997  # -0.3%
+        else:
+            return entry_price * 1.003  # +0.3%
+    
+    def set_take_profit(self, entry_price: float, data: Dict[str, Any]) -> float:
+        """Set quick take profit for scalping"""
+        # 0.5-1% take profit (1.5:1 R:R minimum)
+        side = data.get('side', 'buy')
+        
+        if side == 'buy':
+            return entry_price * 1.005  # +0.5%
+        else:
+            return entry_price * 0.995  # -0.5%
+```
+
+## 📈 Estratégia 2: Swing Trading
+
+```python
+"""
+Swing trading strategy for medium-term trades (1-7 days).
+"""
+
+from strategies.base_strategy import BaseStrategy
+from typing import Dict, Any
+
+class SwingTradingStrategy(BaseStrategy):
+    """
+    Medium-term swing trading strategy.
+    
+    Entry Conditions:
+    - Strong trend (MACD crossover)
+    - Support/resistance levels
+    - Fibonacci retracements
+    - Volume confirmation
+    
+    Exit:
+    - Target: 3-5% profit
+    - Stop loss: 2%
+    """
+    
+    NAME = "Swing Trading"
+    TIMEFRAME = "4h"
+    HOLD_TIME = "1-7days"
+    MIN_VOLATILITY = 2.0
+    MAX_VOLATILITY = 15.0
+    
+    def should_enter(self, data: Dict[str, Any]) -> bool:
+        """Check swing trading entry conditions"""
+        
+        # MACD crossover
+        macd = data.get('macd', 0)
+        macd_signal = data.get('macd_signal', 0)
+        macd_hist = data.get('macd_hist', 0)
+        
+        # Volume confirmation
+        volume_ratio = data.get('volume_ratio', 1.0)  # Current vs average
+        if volume_ratio < 1.2:  # Need 20% above average
+            return False
+        
+        # Trend strength
+        adx = data.get('adx', 0)
+        if adx < 25:  # Weak trend
+            return False
+        
+        side = data.get('side', 'buy')
+        
+        if side == 'buy':
+            # Bullish MACD crossover
+            if macd > macd_signal and macd_hist > 0:
+                # Check if near support
+                current_price = data.get('current_price', 0)
+                support = data.get('support_level', 0)
+                
+                # Within 2% of support
+                if abs(current_price - support) / support < 0.02:
+                    return True
+        
+        if side == 'sell':
+            # Bearish MACD crossover
+            if macd < macd_signal and macd_hist < 0:
+                # Check if near resistance
+                current_price = data.get('current_price', 0)
+                resistance = data.get('resistance_level', 0)
+                
+                # Within 2% of resistance
+                if abs(current_price - resistance) / resistance < 0.02:
+                    return True
+        
+        return False
+    
+    def calculate_position_size(self, data: Dict[str, Any]) -> float:
+        """Calculate position size for swing trading"""
+        # Larger position: 25% of capital
+        base_size = 0.25
+        
+        # Adjust based on trend strength
+        adx = data.get('adx', 25)
+        if adx > 40:  # Very strong trend
+            base_size *= 1.2
+        elif adx < 25:  # Weak trend
+            base_size *= 0.7
+        
+        return min(base_size, 0.30)  # Cap at 30%
+    
+    def set_stop_loss(self, entry_price: float, data: Dict[str, Any]) -> float:
+        """Set stop loss for swing trading"""
+        # 2% stop loss
+        side = data.get('side', 'buy')
+        
+        if side == 'buy':
+            # Place below support
+            support = data.get('support_level', entry_price * 0.98)
+            return min(support, entry_price * 0.98)
+        else:
+            # Place above resistance
+            resistance = data.get('resistance_level', entry_price * 1.02)
+            return max(resistance, entry_price * 1.02)
+    
+    def set_take_profit(self, entry_price: float, data: Dict[str, Any]) -> float:
+        """Set take profit for swing trading"""
+        # 3-5% take profit (minimum 1.5:1 R:R)
+        side = data.get('side', 'buy')
+        
+        if side == 'buy':
+            # Target resistance level
+            resistance = data.get('resistance_level', entry_price * 1.04)
+            return max(resistance, entry_price * 1.03)
+        else:
+            # Target support level
+            support = data.get('support_level', entry_price * 0.96)
+            return min(support, entry_price * 0.97)
+```
+
+## 🔄 Estratégia 3: Arbitrage
+
+```python
+"""
+Arbitrage strategy for cross-pair opportunities.
+"""
+
+from strategies.base_strategy import BaseStrategy
+from typing import Dict, Any, List
+
+class ArbitrageStrategy(BaseStrategy):
+    """
+    Triangular arbitrage strategy.
+    
+    Pairs: BTC/USD, ETH/USD, BTC/ETH
+    
+    Entry Conditions:
+    - Spread > 2% (after fees)
+    - High liquidity on all pairs
+    - Low latency execution
+    
+    Exit:
+    - Immediate (close loop)
+    """
+    
+    NAME = "Arbitrage"
+    TIMEFRAME = "realtime"
+    HOLD_TIME = "seconds"
+    MIN_VOLATILITY = 0.0
+    MAX_VOLATILITY = 100.0
+    
+    def should_enter(self, data: Dict[str, Any]) -> bool:
+        """Check arbitrage opportunity"""
+        
+        # Get prices
+        btc_usd = data.get('BTC/USD', 0)
+        eth_usd = data.get('ETH/USD', 0)
+        btc_eth = data.get('BTC/ETH', 0)
+        
+        if not all([btc_usd, eth_usd, btc_eth]):
+            return False
+        
+        # Calculate theoretical BTC/ETH
+        theoretical_btc_eth = btc_usd / eth_usd
+        
+        # Calculate spread
+        spread = abs(theoretical_btc_eth - btc_eth) / btc_eth
+        
+        # Account for fees (0.1% per trade * 3 trades = 0.3%)
+        fees = 0.003
+        net_spread = spread - fees
+        
+        # Minimum 2% spread after fees
+        if net_spread > 0.02:
+            # Check liquidity
+            min_liquidity = 100_000  # $100k
+            if all([
+                data.get('BTC/USD_liquidity', 0) > min_liquidity,
+                data.get('ETH/USD_liquidity', 0) > min_liquidity,
+                data.get('BTC/ETH_liquidity', 0) > min_liquidity
+            ]):
+                return True
+        
+        return False
+    
+    def calculate_position_size(self, data: Dict[str, Any]) -> float:
+        """Calculate position size for arbitrage"""
+        # Conservative: 15% of capital
+        # Arbitrage is lower risk but needs liquidity
+        return 0.15
+    
+    def set_stop_loss(self, entry_price: float, data: Dict[str, Any]) -> float:
+        """No traditional stop loss for arbitrage"""
+        # Arbitrage is executed immediately
+        # Stop loss is the spread closing
+        return entry_price * 0.99  # Emergency stop
+    
+    def set_take_profit(self, entry_price: float, data: Dict[str, Any]) -> float:
+        """Take profit is immediate on arbitrage"""
+        # Close the loop immediately
+        spread = data.get('spread', 0.02)
+        return entry_price * (1 + spread)
+```
+
+## ⚠️ Regras Importantes
+
+1. **SEMPRE** herdar de `BaseStrategy`
+2. **SEMPRE** implementar todos os métodos abstratos
+3. **SEMPRE** validar trade com `risk_manager`
+4. **SEMPRE** logar decisões de entrada/saída
+5. **NUNCA** executar sem stop loss
+6. **SEMPRE** verificar R:R mínimo (1.5:1)
+7. **SEMPRE** respeitar limites de posição
+
+## 🧪 Testes para Estratégias
+
+```python
+import pytest
+from strategies.scalping import ScalpingStrategy
+from utils.risk_manager import RiskManager
+
+def test_scalping_entry_conditions():
+    """Test scalping entry logic"""
+    risk_mgr = RiskManager()
+    strategy = ScalpingStrategy(risk_mgr)
+    
+    # Valid entry
+    data = {
+        'volume_24h': 10_000_000,
+        'spread_percent': 0.05,
+        'rsi': 50,
+        'bb_width': 0.02,
+        'ema_9': 50000,
+        'ema_21': 49000,
+        'current_price': 51000,
+        'side': 'buy'
+    }
+    
+    assert strategy.should_enter(data) == True
+    
+    # Invalid: low volume
+    data['volume_24h'] = 1_000_000
+    assert strategy.should_enter(data) == False
+
+def test_position_sizing():
+    """Test position size calculation"""
+    risk_mgr = RiskManager()
+    strategy = ScalpingStrategy(risk_mgr)
+    
+    data = {'volatility': 3.0}
+    size = strategy.calculate_position_size(data)
+    
+    assert 0 < size <= 0.20
+    assert isinstance(size, float)
+```

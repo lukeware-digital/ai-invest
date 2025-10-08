@@ -1,0 +1,273 @@
+# CeciAI - Git Ignore
+# Sistema de Trading com IA - Arquivos que não devem ser versionados
+
+# ===== Environment & Secrets =====
+.env
+.env.*
+!.env.example
+config/api_keys.py
+*.key
+*.pem
+secrets/
+credentials/
+*.credentials
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.pyc
+*.pyo
+*.pyd
+
+# ===== Virtual Environments =====
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+poetry.lock
+Pipfile.lock
+
+# ===== Data & Cache =====
+# Dados históricos de mercado
+data/historical/*.parquet
+data/historical/*.csv
+data/historical/*.json
+data/historical/*.feather
+data/realtime/*
+data/cache/*
+
+# Modelos treinados
+data/models/*.pkl
+data/models/*.h5
+data/models/*.pt
+data/models/*.pth
+data/models/*.onnx
+data/models/*.tflite
+data/models/*.pb
+
+# Manter estrutura de diretórios
+!data/historical/.gitkeep
+!data/realtime/.gitkeep
+!data/cache/.gitkeep
+!data/models/.gitkeep
+
+# ===== Database Files =====
+# Banco de dados principal
+*.db
+*.duckdb
+*.duckdb.wal
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+data/*.duckdb
+data/ceciai.duckdb
+ceciai.duckdb
+
+# Redis dumps
+dump.rdb
+appendonly.aof
+
+# ===== Logs =====
+logs/*.log
+logs/*.txt
+logs/*.out
+logs/*.err
+*.log
+!logs/.gitkeep
+
+# ===== IDE & Editors =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+
+# ===== Jupyter =====
+.ipynb_checkpoints/
+*.ipynb
+notebooks/*.ipynb
+!notebooks/examples/*.ipynb
+
+# ===== Testing & Coverage =====
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ===== Linting & Formatting =====
+.ruff_cache/
+.pylint.d/
+.pytype/
+.pyre/
+
+# ===== Machine Learning =====
+# Modelos treinados
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.hdf5
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.pb
+checkpoints/
+tensorboard/
+runs/
+mlruns/
+wandb/
+
+# Datasets
+datasets/
+*.npy
+*.npz
+
+# ===== Backtest & Trading Results =====
+backtest_results/
+performance_reports/
+trade_logs/
+paper_trading_results/
+*.backtest.json
+*.backtest.csv
+
+# ===== Temporary Files =====
+*.tmp
+*.temp
+*.bak
+*.backup
+*~.nib
+local_settings.py
+instance/
+.scrapy
+
+# ===== OS Specific =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ===== Documentation Build =====
+docs/_build/
+docs/_static/
+docs/_templates/
+site/
+_build/
+*.html
+!docs/**/*.html
+
+# ===== Docker =====
+.dockerignore
+docker-compose.override.yml
+.docker/
+
+# ===== Streamlit =====
+.streamlit/secrets.toml
+.streamlit/config.toml
+
+# ===== Ollama / LLM =====
+# Modelos LLM baixados localmente
+models/ollama/
+.ollama/
+llm_cache/
+
+# ===== Backup Files =====
+data/backups/*.backup
+data/backups/*.zip
+data/backups/*.tar.gz
+data/backups/*.7z
+backups/
+*.backup
+*.old
+
+# ===== API Keys & Tokens =====
+.coinapi_key
+.openai_key
+api_keys.txt
+tokens.json
+
+# ===== Performance Profiling =====
+*.prof
+*.lprof
+.profiling/
+
+# ===== Generated Files =====
+# Arquivos gerados pelo sistema
+LEVANTAMENTO_DESENVOLVIMENTO.md
+TODO.md
+CHANGELOG_AUTO.md
+
+# ===== Celery & Message Queues =====
+celerybeat-schedule
+celerybeat.pid
+
+# ===== Misc =====
+*.swp
+*.swo
+.cache/
+node_modules/
+package-lock.json
+yarn.lock

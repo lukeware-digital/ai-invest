@@ -1,0 +1,54 @@
+[run]
+source = .
+omit = 
+    # Test files
+    tests/*
+    
+    # Init files (only imports)
+    */__init__.py
+    
+    # Scripts and utilities (not business logic)
+    scripts/*
+    utils/download_historical_data.py
+    utils/data_updater.py
+    utils/backup_manager.py
+    
+    # Docker and deployment files
+    Dockerfile*
+    docker-compose*.yml
+    
+    # Configuration files
+    *.toml
+    *.txt
+    *.md
+    *.yml
+    *.yaml
+    
+    # Cache and temporary files
+    __pycache__/*
+    .pytest_cache/*
+    htmlcov/*
+    
+[report]
+# Fail if coverage is below 90%
+fail_under = 90
+
+# Show missing lines
+show_missing = True
+
+# Exclude lines from coverage
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+
+[html]
+directory = htmlcov
+

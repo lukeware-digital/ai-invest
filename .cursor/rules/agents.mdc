@@ -1,0 +1,257 @@
+# @agents - Regras para Desenvolvimento dos Agentes LLM
+
+## 🤖 Contexto
+Você está trabalhando nos **9 agentes LLM especializados** do CeciAI.
+
+## 📋 Pipeline dos Agentes
+
+```
+Agent 1 (Market Expert) 
+    ↓
+Agent 2 (Data Analyzer)
+    ↓
+Agent 3 (Technical Analyst)
+    ↓
+Agent 4 (Pattern Specialist)
+    ↓
+Agent 5 (Investment Evaluator)
+    ↓
+Agent 6 (Time Horizon Advisor)
+    ↓
+Agent 7 (Day-Trade Classifier)
+    ↓
+Agent 8 (Day-Trade Executor) OR Agent 9 (Long-Term Executor)
+```
+
+## 🔧 Template Base para Agentes
+
+```python
+"""
+Agent [N]: [Nome do Agente]
+Responsabilidade: [Descrição]
+Input: [O que recebe]
+Output: [O que retorna]
+"""
+
+import ollama
+from typing import Dict, Any
+import logging
+
+logger = logging.getLogger(f"CeciAI.Agent{N}")
+
+class Agent{N}{Nome}:
+    """
+    [Descrição detalhada do agente]
+    """
+    
+    def __init__(self, model: str = "llama3:8b"):
+        self.model = model
+        self.name = "Agent {N}: {Nome}"
+        logger.info(f"{self.name} initialized")
+    
+    def analyze(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Main analysis method.
+        
+        Args:
+            input_data: Data from previous agent or market
+            
+        Returns:
+            Analysis result for next agent
+        """
+        try:
+            logger.info(f"{self.name} starting analysis")
+            
+            # 1. Validate input
+            self._validate_input(input_data)
+            
+            # 2. Prepare prompt for LLM
+            prompt = self._build_prompt(input_data)
+            
+            # 3. Call Ollama
+            response = self._call_llm(prompt)
+            
+            # 4. Parse and validate output
+            result = self._parse_response(response)
+            
+            logger.info(f"{self.name} analysis complete")
+            return result
+            
+        except Exception as e:
+            logger.error(f"{self.name} error: {e}")
+            raise
+    
+    def _validate_input(self, data: Dict[str, Any]) -> None:
+        """Validate input data structure"""
+        required_fields = []  # Define required fields
+        for field in required_fields:
+            if field not in data:
+                raise ValueError(f"Missing required field: {field}")
+    
+    def _build_prompt(self, data: Dict[str, Any]) -> str:
+        """Build prompt for LLM"""
+        prompt = f"""
+        [Instruções específicas para este agente]
+        
+        INPUT DATA:
+        {data}
+        
+        TASK:
+        [O que o agente deve fazer]
+        
+        OUTPUT FORMAT (JSON):
+        {{
+            "field1": "value",
+            "field2": "value"
+        }}
+        """
+        return prompt
+    
+    def _call_llm(self, prompt: str) -> str:
+        """Call Ollama LLM"""
+        try:
+            response = ollama.generate(
+                model=self.model,
+                prompt=prompt,
+                options={
+                    "temperature": 0.7,
+                    "top_p": 0.9
+                }
+            )
+            return response['response']
+        except Exception as e:
+            logger.error(f"LLM call failed: {e}")
+            raise
+    
+    def _parse_response(self, response: str) -> Dict[str, Any]:
+        """Parse LLM response to structured data"""
+        import json
+        try:
+            # Extract JSON from response
+            result = json.loads(response)
+            return result
+        except json.JSONDecodeError:
+            logger.error(f"Failed to parse LLM response: {response}")
+            raise
+```
+
+## 📊 Especificações de Cada Agente
+
+### **Agent 1: Market Expert**
+- **Input:** Symbol (BTC/USD, ETH/USD)
+- **Output:** Market regime, trend, volatility assessment
+- **Prompt Focus:** Macro market conditions, news sentiment
+
+### **Agent 2: Data Analyzer**
+- **Input:** Market context from Agent 1
+- **Output:** Best data sources, timeframes, indicators to use
+- **Prompt Focus:** Data quality, relevance, availability
+
+### **Agent 3: Technical Analyst**
+- **Input:** Data sources from Agent 2
+- **Output:** Technical signals (RSI, MACD, Bollinger, etc)
+- **Prompt Focus:** Technical analysis, indicator interpretation
+
+### **Agent 4: Pattern Specialist**
+- **Input:** Technical signals from Agent 3
+- **Output:** Candlestick patterns, chart patterns
+- **Prompt Focus:** Pattern recognition, significance
+
+### **Agent 5: Investment Evaluator**
+- **Input:** Patterns from Agent 4
+- **Output:** Investment opportunities with risk/reward
+- **Prompt Focus:** Opportunity quality, risk assessment
+
+### **Agent 6: Time Horizon Advisor**
+- **Input:** Opportunities from Agent 5
+- **Output:** Recommended timeframe (scalping, swing, long-term)
+- **Prompt Focus:** Time horizon optimization
+
+### **Agent 7: Day-Trade Classifier**
+- **Input:** Timeframe from Agent 6
+- **Output:** Trade type classification (day_trade vs long_term)
+- **Prompt Focus:** Classification logic
+
+### **Agent 8: Day-Trade Executor**
+- **Input:** Day-trade opportunities from Agent 7
+- **Output:** Execution plan (entry, stop-loss, take-profit)
+- **Prompt Focus:** Short-term execution strategy
+
+### **Agent 9: Long-Term Executor**
+- **Input:** Long-term opportunities from Agent 7
+- **Output:** Position sizing, entry strategy, exit plan
+- **Prompt Focus:** Long-term position management
+
+## ⚠️ Regras Importantes
+
+1. **SEMPRE** validar input antes de processar
+2. **SEMPRE** logar início e fim de análise
+3. **SEMPRE** retornar JSON estruturado
+4. **SEMPRE** tratar exceções do Ollama
+5. **NUNCA** executar trades sem validação de risco
+6. **SEMPRE** incluir confidence score no output
+7. **SEMPRE** documentar decisões no log
+
+## 🧪 Testes para Agentes
+
+```python
+import pytest
+from agents.agent_1_market_expert import Agent1MarketExpert
+
+def test_agent_1_initialization():
+    agent = Agent1MarketExpert()
+    assert agent.name == "Agent 1: Market Expert"
+    assert agent.model == "llama3:8b"
+
+def test_agent_1_analysis():
+    agent = Agent1MarketExpert()
+    input_data = {"symbol": "BTC/USD"}
+    result = agent.analyze(input_data)
+    
+    assert "market_regime" in result
+    assert "trend" in result
+    assert "confidence" in result
+    assert 0 <= result["confidence"] <= 1
+
+def test_agent_1_invalid_input():
+    agent = Agent1MarketExpert()
+    with pytest.raises(ValueError):
+        agent.analyze({})  # Missing required fields
+```
+
+## 📝 Exemplo de Output Esperado
+
+```json
+{
+    "agent_name": "Agent 1: Market Expert",
+    "timestamp": "2024-01-15T10:30:00Z",
+    "input_symbol": "BTC/USD",
+    "analysis": {
+        "market_regime": "bullish",
+        "trend": "uptrend",
+        "volatility": "medium",
+        "sentiment": "positive"
+    },
+    "confidence": 0.85,
+    "reasoning": "Strong upward momentum with increasing volume...",
+    "next_agent": "Agent 2: Data Analyzer"
+}
+```
+
+## 🔗 Comunicação Entre Agentes
+
+```python
+# Exemplo de pipeline
+from agents.agent_1_market_expert import Agent1MarketExpert
+from agents.agent_2_data_analyzer import Agent2DataAnalyzer
+
+# Agent 1
+agent1 = Agent1MarketExpert()
+result1 = agent1.analyze({"symbol": "BTC/USD"})
+
+# Agent 2 recebe output do Agent 1
+agent2 = Agent2DataAnalyzer()
+result2 = agent2.analyze(result1)
+
+# E assim por diante...
+```

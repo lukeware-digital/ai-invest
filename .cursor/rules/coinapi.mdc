@@ -1,0 +1,318 @@
+# @coinapi - Regras para Integração com CoinAPI
+
+## 🔌 Contexto
+Você está trabalhando na **integração com CoinAPI** para obter dados de mercado.
+
+## ⚠️ REGRA CRÍTICA: Modo Desenvolvimento vs Produção
+
+### **MODO DESENVOLVIMENTO (Padrão)**
+```python
+# SEMPRE usar cache local
+# NÃO fazer chamadas reais à API
+# Economizar quota gratuita
+
+from utils.coinapi_client import CoinAPIClient
+
+client = CoinAPIClient(mode="development")
+data = client.get_cached_data("BTC/USD")  # ✅ Usa cache
+```
+
+### **MODO PRODUÇÃO**
+```python
+# Apenas quando EXPLICITAMENTE solicitado
+# Usar dados em tempo real
+
+client = CoinAPIClient(mode="production")
+data = client.get_realtime_data("BTC/USD")  # ⚠️ Consome API!
+```
+
+## 📊 Serviços CoinAPI Utilizados
+
+### **1. Market Data API**
+```python
+# Endpoints principais:
+- /v1/trades/latest          # Últimos trades
+- /v1/ohlcv/historical       # Dados históricos OHLCV
+- /v1/orderbooks/latest      # Order book L2
+- /v1/quotes/latest          # Cotações bid/ask
+```
+
+### **2. Flat Files (Cache)**
+```python
+# Dados bulk para desenvolvimento
+# Armazenados em: data/historical/
+
+Arquivos:
+- btc_usd_1min.parquet
+- btc_usd_1hour.parquet
+- btc_usd_1day.parquet
+- eth_usd_1min.parquet
+- eth_usd_1hour.parquet
+- eth_usd_1day.parquet
+```
+
+### **3. EMS Trading API**
+```python
+# Execução de ordens (produção)
+- POST /v1/orders            # Criar ordem
+- GET /v1/orders/{id}        # Status da ordem
+- DELETE /v1/orders/{id}     # Cancelar ordem
+```
+
+## 🔧 Template do Cliente CoinAPI
+
+```python
+"""
+CoinAPI Client with development/production modes
+"""
+
+import os
+import json
+import requests
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+import pandas as pd
+import logging
+
+logger = logging.getLogger("CeciAI.CoinAPI")
+
+class CoinAPIClient:
+    """
+    CoinAPI client with cache support for development.
+    """
+    
+    BASE_URL = "https://rest.coinapi.io/v1"
+    
+    def __init__(self, mode: str = "development"):
+        """
+        Initialize CoinAPI client.
+        
+        Args:
+            mode: "development" (cache) or "production" (real-time)
+        """
+        self.mode = mode
+        self.api_key = os.getenv("COINAPI_KEY", "")
+        
+        if mode == "production" and not self.api_key:
+            raise ValueError("COINAPI_KEY required for production mode")
+        
+        logger.info(f"CoinAPI initialized in {mode} mode")
+    
+    def get_realtime_data(self, symbol: str) -> Dict:
+        """
+        Get real-time market data (PRODUCTION ONLY).
+        
+        Args:
+            symbol: Trading pair (e.g., "BTC/USD")
+            
+        Returns:
+            Real-time market data
+        """
+        if self.mode != "production":
+            logger.warning("Attempted real-time call in development mode")
+            return self.get_cached_data(symbol)
+        
+        symbol_id = self._convert_symbol(symbol)
+        
+        try:
+            # Get latest trades
+            trades = self._api_call(f"/trades/latest", {
+                "filter_symbol_id": symbol_id,
+                "limit": 10
+            })
+            
+            # Get order book
+            orderbook = self._api_call(f"/orderbooks/latest", {
+                "filter_symbol_id": symbol_id,
+                "limit": 1
+            })
+            
+            return {
+                "symbol": symbol,
+                "trades": trades,
+                "orderbook": orderbook[0] if orderbook else None,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Real-time data fetch failed: {e}")
+            raise
+    
+    def get_cached_data(self, symbol: str, timeframe: str = "1h") -> pd.DataFrame:
+        """
+        Get cached historical data (DEVELOPMENT MODE).
+        
+        Args:
+            symbol: Trading pair (e.g., "BTC/USD")
+            timeframe: "1min", "1h", "1d"
+            
+        Returns:
+            Cached data as DataFrame
+        """
+        cache_file = self._get_cache_path(symbol, timeframe)
+        
+        if not os.path.exists(cache_file):
+            logger.error(f"Cache file not found: {cache_file}")
+            raise FileNotFoundError(f"Cache not found. Run download_historical_data.py first")
+        
+        logger.info(f"Loading cached data: {cache_file}")
+        return pd.read_parquet(cache_file)
+    
+    def get_historical_ohlcv(
+        self, 
+        symbol: str, 
+        period: str = "1HRS",
+        days: int = 30
+    ) -> List[Dict]:
+        """
+        Get historical OHLCV data.
+        
+        Args:
+            symbol: Trading pair
+            period: "1MIN", "5MIN", "1HRS", "1DAY"
+            days: Number of days to fetch
+            
+        Returns:
+            List of OHLCV data
+        """
+        if self.mode == "development":
+            # Use cache
+            df = self.get_cached_data(symbol, self._period_to_timeframe(period))
+            return df.tail(days * 24).to_dict('records')  # Approximate
+        
+        # Production: fetch from API
+        symbol_id = self._convert_symbol(symbol)
+        time_end = datetime.now()
+        time_start = time_end - timedelta(days=days)
+        
+        try:
+            data = self._api_call("/ohlcv/historical", {
+                "symbol_id": symbol_id,
+                "period_id": period,
+                "time_start": time_start.isoformat(),
+                "time_end": time_end.isoformat()
+            })
+            return data
+            
+        except Exception as e:
+            logger.error(f"Historical data fetch failed: {e}")
+            raise
+    
+    def _api_call(self, endpoint: str, params: Dict) -> Dict:
+        """Make API call to CoinAPI"""
+        headers = {"X-CoinAPI-Key": self.api_key}
+        url = f"{self.BASE_URL}{endpoint}"
+        
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        
+        return response.json()
+    
+    def _convert_symbol(self, symbol: str) -> str:
+        """Convert symbol format to CoinAPI format"""
+        mapping = {
+            "BTC/USD": "BINANCE_SPOT_BTC_USDT",
+            "ETH/USD": "BINANCE_SPOT_ETH_USDT"
+        }
+        return mapping.get(symbol, symbol)
+    
+    def _get_cache_path(self, symbol: str, timeframe: str) -> str:
+        """Get cache file path"""
+        symbol_clean = symbol.replace("/", "_").lower()
+        return f"data/historical/{symbol_clean}_{timeframe}.parquet"
+    
+    def _period_to_timeframe(self, period: str) -> str:
+        """Convert CoinAPI period to timeframe"""
+        mapping = {
+            "1MIN": "1min",
+            "5MIN": "5min",
+            "1HRS": "1hour",
+            "1DAY": "1day"
+        }
+        return mapping.get(period, "1hour")
+```
+
+## 📥 Script de Download de Dados Históricos
+
+```python
+"""
+Download historical data for development cache.
+Run once to populate cache.
+"""
+
+from utils.coinapi_client import CoinAPIClient
+import pandas as pd
+import os
+
+def download_historical_data():
+    """Download and cache historical data"""
+    
+    # Use production mode temporarily to download
+    client = CoinAPIClient(mode="production")
+    
+    symbols = ["BTC/USD", "ETH/USD"]
+    timeframes = [
+        ("1MIN", "1min", 7),      # 7 days of 1min data
+        ("1HRS", "1hour", 365),   # 1 year of 1hour data
+        ("1DAY", "1day", 730)     # 2 years of 1day data
+    ]
+    
+    for symbol in symbols:
+        for period, tf_name, days in timeframes:
+            print(f"Downloading {symbol} {tf_name}...")
+            
+            try:
+                data = client.get_historical_ohlcv(symbol, period, days)
+                df = pd.DataFrame(data)
+                
+                # Save to cache
+                cache_path = client._get_cache_path(symbol, tf_name)
+                os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                df.to_parquet(cache_path)
+                
+                print(f"✅ Saved {len(df)} records to {cache_path}")
+                
+            except Exception as e:
+                print(f"❌ Error downloading {symbol} {tf_name}: {e}")
+
+if __name__ == "__main__":
+    download_historical_data()
+```
+
+## 🧪 Testes
+
+```python
+import pytest
+from utils.coinapi_client import CoinAPIClient
+
+def test_development_mode():
+    """Test that development mode uses cache"""
+    client = CoinAPIClient(mode="development")
+    assert client.mode == "development"
+
+def test_cached_data_loading():
+    """Test loading cached data"""
+    client = CoinAPIClient(mode="development")
+    data = client.get_cached_data("BTC/USD", "1hour")
+    
+    assert not data.empty
+    assert "price_open" in data.columns
+    assert "price_close" in data.columns
+
+def test_production_requires_api_key(monkeypatch):
+    """Test that production mode requires API key"""
+    monkeypatch.delenv("COINAPI_KEY", raising=False)
+    
+    with pytest.raises(ValueError):
+        CoinAPIClient(mode="production")
+```
+
+## 📋 Checklist de Integração
+
+- [ ] API key configurada em `.env`
+- [ ] Cache histórico baixado (`download_historical_data.py`)
+- [ ] Cliente CoinAPI implementado
+- [ ] Modo desenvolvimento testado
+- [ ] Testes unitários passando
+- [ ] Logging configurado
+- [ ] Tratamento de erros implementado
