@@ -557,18 +557,6 @@ python utils/data_updater.py             # Atualizar dados
 
 ---
 
-## ✅ Checklist de Validação
-
-Após instalação, verificar:
-
-- [ ] `ollama list` mostra llama3.2:3b
-- [ ] `python scripts/test_complete_system.py` passa todos os testes
-- [ ] `curl http://localhost:8000/health` retorna 200 OK
-- [ ] `ls data/models/` mostra modelos ML treinados
-- [ ] Análise de exemplo executa sem erros
-
----
-
 ## 🎯 Próximos Passos
 
 1. ✅ **Sistema funcionando** - Parabéns!
