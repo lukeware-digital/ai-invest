@@ -1,19 +1,348 @@
-# 📦 Guia de Instalação Completo - CeciAI
+# 📦 O Que Instalar ANTES da Aplicação - CeciAI
 
-**Sistema de Trading com IA usando 9 Agentes LLM**
+**Este documento lista TUDO que você precisa instalar no seu computador antes de rodar a aplicação CeciAI.**
 
 ---
 
-## 🎯 Pré-requisitos
+## 🎯 Lista Completa do Que Precisa Instalar
 
-### Obrigatório:
-- ✅ **Python 3.11+** (Python 3.12 recomendado)
-- ✅ **5 GB de espaço em disco**
-- ✅ **8 GB de RAM** (16 GB recomendado)
+### 1️⃣ Python 3.11+ (OBRIGATÓRIO)
 
-### Opcional (mas recomendado):
-- 🐳 Docker & Docker Compose
-- 🖥️ GPU NVIDIA (para acelerar LLM)
+**O que é:** Linguagem de programação que roda a aplicação
+
+**Como verificar se já tem:**
+```bash
+python3 --version
+# ou
+python --version
+```
+
+**Como instalar:**
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt update
+sudo apt install python3.11 python3.11-venv python3-pip
+```
+
+**Mac:**
+```bash
+# Opção 1: Homebrew
+brew install python@3.11
+
+# Opção 2: Download direto
+# https://www.python.org/downloads/macos/
+```
+
+**Windows:**
+1. Baixe em: https://www.python.org/downloads/windows/
+2. Execute o instalador
+3. ✅ IMPORTANTE: Marque "Add Python to PATH"
+
+---
+
+### 2️⃣ Git (OBRIGATÓRIO)
+
+**O que é:** Ferramenta para baixar o código do GitHub
+
+**Como verificar se já tem:**
+```bash
+git --version
+```
+
+**Como instalar:**
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt update
+sudo apt install git
+```
+
+**Mac:**
+```bash
+brew install git
+# Ou vem junto com Xcode Command Line Tools
+xcode-select --install
+```
+
+**Windows:**
+- Baixe em: https://git-scm.com/download/win
+- Execute o instalador
+
+---
+
+### 3️⃣ Ollama (OBRIGATÓRIO)
+
+**O que é:** Software de IA local (LLM) - é o "cérebro" dos 9 agentes inteligentes
+
+**Como verificar se já tem:**
+```bash
+ollama --version
+```
+
+**Como instalar:**
+
+**Linux:**
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+**Mac:**
+```bash
+# Opção 1: Homebrew
+brew install ollama
+
+# Opção 2: Download direto
+# https://ollama.com/download/mac
+```
+
+**Windows:**
+1. Baixe em: https://ollama.com/download/windows
+2. Execute o instalador OllamaSetup.exe
+3. Ollama inicia automaticamente
+
+**Após instalar, baixe o modelo de IA:**
+```bash
+ollama pull llama3.2:3b
+```
+
+---
+
+### 4️⃣ pip (OBRIGATÓRIO)
+
+**O que é:** Gerenciador de pacotes Python (instala bibliotecas)
+
+**Como verificar se já tem:**
+```bash
+pip --version
+# ou
+pip3 --version
+```
+
+**Como instalar:**
+
+**Linux:**
+```bash
+sudo apt install python3-pip
+```
+
+**Mac:**
+```bash
+# Vem junto com Python
+# Se não tiver:
+python3 -m ensurepip --upgrade
+```
+
+**Windows:**
+- Vem junto com Python (se marcou "Add to PATH")
+
+---
+
+## 🔧 Dependências do Sistema (OBRIGATÓRIO no Linux)
+
+**O que é:** Bibliotecas do sistema operacional que o Python precisa
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt update
+sudo apt install -y \
+    build-essential \
+    python3-dev \
+    libssl-dev \
+    libffi-dev \
+    curl \
+    wget
+```
+
+**Mac:**
+```bash
+# Instalar Command Line Tools
+xcode-select --install
+```
+
+**Windows:**
+- Não precisa (tudo vem no instalador do Python)
+
+---
+
+## 💾 Banco de Dados (INCLUÍDO - não precisa instalar)
+
+**O que usa:** 
+- ✅ **DuckDB** - Banco de dados embutido (vem nas bibliotecas Python)
+- ✅ **Redis** - Cache opcional (não obrigatório)
+
+**Você NÃO precisa instalar:**
+- ❌ PostgreSQL
+- ❌ MySQL
+- ❌ MongoDB
+- ❌ Redis Server
+
+**Por quê?** DuckDB é um arquivo local, como SQLite. Já vem incluído!
+
+---
+
+## 🐳 Docker & Docker Compose (OPCIONAL)
+
+**O que é:** Plataforma para rodar aplicações em containers (não obrigatório)
+
+**Quando precisa:** Só se quiser usar containers ao invés de rodar direto
+
+**Como verificar se já tem:**
+```bash
+docker --version
+docker-compose --version
+```
+
+**Como instalar:**
+
+**Linux (Ubuntu/Debian):**
+```bash
+# Docker
+sudo apt update
+sudo apt install docker.io
+
+# Docker Compose
+sudo apt install docker-compose
+
+# Adicionar seu usuário ao grupo docker
+sudo usermod -aG docker $USER
+# Fazer logout e login novamente
+```
+
+**Mac:**
+```bash
+# Instalar Docker Desktop
+brew install --cask docker
+
+# Ou baixar de: https://www.docker.com/products/docker-desktop/
+```
+
+**Windows:**
+- Baixe Docker Desktop: https://www.docker.com/products/docker-desktop/
+- Execute o instalador
+
+**⚠️ ATENÇÃO:** Docker é OPCIONAL! Se não quiser instalar, use o método sem Docker.
+
+---
+
+## 📊 Streamlit (OPCIONAL - para Dashboard)
+
+**O que é:** Framework para criar dashboard visual
+
+**Quando precisa:** Só se quiser usar o dashboard visual
+
+**Como instalar:**
+```bash
+# Vem no requirements.txt, mas se quiser instalar separado:
+pip install streamlit plotly
+```
+
+---
+
+## 🖥️ GPU/CUDA (OPCIONAL - para acelerar IA)
+
+**O que é:** Suporte para placa de vídeo NVIDIA acelerar processamento
+
+**Quando precisa:** Só se tiver placa NVIDIA e quiser usar GPU
+
+**Como verificar se tem:**
+```bash
+nvidia-smi
+```
+
+**Como instalar CUDA:**
+
+**Linux:**
+```bash
+# Ubuntu/Debian
+sudo apt install nvidia-cuda-toolkit
+
+# Verificar
+nvcc --version
+```
+
+**Windows/Mac:**
+- Baixe CUDA Toolkit: https://developer.nvidia.com/cuda-downloads
+
+**⚠️ ATENÇÃO:** GPU é OPCIONAL! Sistema funciona perfeitamente com CPU.
+
+---
+
+## 🌐 Navegador Web (OBRIGATÓRIO)
+
+**O que é:** Para acessar a API e Dashboard
+
+**Recomendados:**
+- ✅ Google Chrome
+- ✅ Firefox
+- ✅ Edge
+- ✅ Safari
+
+---
+
+## 📝 Editor de Código (RECOMENDADO)
+
+**O que é:** Para ver e editar código (opcional mas útil)
+
+**Recomendados:**
+- ✅ VS Code - https://code.visualstudio.com/
+- ✅ PyCharm - https://www.jetbrains.com/pycharm/
+- ✅ Sublime Text
+- ✅ Vim/Nano (terminal)
+
+---
+
+## 📊 Resumo do Que Instalar
+
+### ✅ OBRIGATÓRIO (não funciona sem isso):
+
+| Software | Função | Como Instalar |
+|----------|--------|---------------|
+| **Python 3.11+** | Linguagem da aplicação | python.org/downloads |
+| **Git** | Baixar código | git-scm.com/downloads |
+| **Ollama** | IA local (LLM) | ollama.com/download |
+| **pip** | Instalar bibliotecas | Vem com Python |
+| **Navegador** | Acessar API/Dashboard | Chrome, Firefox, etc |
+
+### ⭐ RECOMENDADO (ajuda mas não é obrigatório):
+
+| Software | Função | Como Instalar |
+|----------|--------|---------------|
+| **Docker** | Containers (alternativa) | docker.com |
+| **VS Code** | Editor de código | code.visualstudio.com |
+| **Streamlit** | Dashboard visual | pip install streamlit |
+
+### ❌ NÃO PRECISA INSTALAR:
+
+- ❌ PostgreSQL / MySQL / MongoDB
+- ❌ Redis Server
+- ❌ Node.js
+- ❌ Java
+- ❌ Apache / Nginx
+- ❌ CUDA (funciona sem GPU)
+
+---
+
+## ✅ Checklist de Instalação
+
+Antes de continuar, verifique se instalou:
+
+- [ ] Python 3.11+ (`python3 --version`)
+- [ ] Git (`git --version`)
+- [ ] Ollama (`ollama --version`)
+- [ ] pip (`pip --version`)
+- [ ] Modelo Ollama (`ollama list` mostra llama3.2:3b)
+- [ ] Navegador web instalado
+- [ ] (Opcional) Docker (`docker --version`)
+- [ ] (Opcional) VS Code ou editor
+
+---
+
+## 🚀 Próximos Passos
+
+Agora que instalou tudo, vá para:
+
+👉 **[QUICK_START.md](docs/QUICK_START.md)** - Como fazer a aplicação rodar
 
 ---
 
