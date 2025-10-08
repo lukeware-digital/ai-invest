@@ -1,18 +1,76 @@
 # 🚀 CeciAI - Guia de Início Rápido
 
 **Tempo estimado:** 5-10 minutos  
-**Pré-requisitos:** Python 3.11+, Docker (opcional)
+**Pré-requisitos:** Python 3.11+ (obrigatório), Docker (opcional)
 
 ---
 
 ## ⚡ Instalação Rápida
 
-### Opção 1: Docker (Recomendado)
+### 🎯 Escolha o Método de Instalação
+
+- **Opção 1:** Sem Docker (Mais Simples) ⭐ **RECOMENDADO**
+- **Opção 2:** Com Docker (Se você tem Docker instalado)
+
+---
+
+### Opção 1: Instalação Sem Docker (Recomendado) ⭐
+
+**Instalação completa em 5 comandos:**
 
 ```bash
 # 1. Clonar repositório
-git clone <repo-url>
-cd ceci-ai
+git clone https://github.com/lukeware-digital/ai-invest.git
+cd ai-invest
+
+# 2. Criar ambiente virtual Python
+python3 -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
+
+# 3. Instalar dependências
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# 4. Instalar e configurar Ollama (LLM gratuito)
+# Linux/Mac:
+curl -fsSL https://ollama.com/install.sh | sh
+ollama serve &  # Iniciar em background
+ollama pull llama3.2:3b
+
+# Windows (baixar de https://ollama.com/download)
+# Instalar e executar Ollama
+# ollama pull llama3.2:3b
+
+# 5. Baixar dados históricos (opcional mas recomendado)
+python utils/download_historical_data.py
+```
+
+**Pronto! Sistema instalado! 🎉**
+
+### Iniciar o Sistema:
+
+```bash
+# Terminal 1: Iniciar API
+uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+
+# Terminal 2 (opcional): Dashboard
+streamlit run dashboard.py --server.port 8050
+
+# Testar
+curl http://localhost:8000/health
+```
+
+---
+
+### Opção 2: Com Docker (Se Disponível)
+
+**⚠️ Requer Docker e Docker Compose instalados**
+
+```bash
+# 1. Clonar repositório
+git clone https://github.com/lukeware-digital/ai-invest.git
+cd ai-invest
 
 # 2. Build completo (instala tudo automaticamente)
 make build
@@ -24,28 +82,7 @@ make up
 curl http://localhost:8000/health
 ```
 
-### Opção 2: Instalação Manual
-
-```bash
-# 1. Ambiente Python
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# venv\Scripts\activate   # Windows
-
-# 2. Dependências
-pip install -r requirements.txt
-
-# 3. Ollama (LLM local)
-curl -fsSL https://ollama.com/install.sh | sh
-ollama pull llama3.2:3b
-
-# 4. Configurar ambiente
-cp .env.example .env
-# Editar .env se necessário
-
-# 5. Testar sistema
-python scripts/test_complete_system.py
-```
+**Sem Docker?** Veja o erro de Docker Compose? Use a **Opção 1** acima! 👆
 
 ---
 
@@ -212,7 +249,40 @@ capital_mgr = CapitalManager(
 
 ## 🐛 Troubleshooting
 
-### Problema: Ollama não responde
+### ❌ Problema: "Docker Compose não encontrado"
+
+**Erro:**
+```
+❌ Docker Compose não encontrado
+make: *** [Makefile:63: check-system] Error 1
+```
+
+**Solução:** Use a instalação sem Docker (Opção 1)! É mais simples e rápida.
+
+```bash
+# Siga os passos da Opção 1 (Sem Docker):
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+# ... continue com os demais passos
+```
+
+**Ou instale o Docker** (opcional):
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install docker.io docker-compose
+
+# Mac
+brew install docker docker-compose
+
+# Windows
+# Baixar de: https://www.docker.com/products/docker-desktop
+```
+
+---
+
+### ❌ Problema: Ollama não responde
 
 ```bash
 # Verificar se está rodando
@@ -221,38 +291,123 @@ ollama list
 # Se não estiver, iniciar
 ollama serve
 
+# Ou em background (Linux/Mac)
+nohup ollama serve > /dev/null 2>&1 &
+
 # Baixar modelo se necessário
 ollama pull llama3.2:3b
+
+# Verificar se modelo foi baixado
+ollama list | grep llama3.2
 ```
 
-### Problema: Erro de GPU
+---
+
+### ❌ Problema: "ModuleNotFoundError"
 
 ```bash
-# Verificar CUDA
+# Ativar ambiente virtual
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
+
+# Reinstalar dependências
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Verificar instalação
+pip list | grep -E "(fastapi|streamlit|pandas)"
+```
+
+---
+
+### ❌ Problema: Erro de GPU / CUDA
+
+```bash
+# Verificar CUDA (opcional - sistema funciona sem GPU)
 nvidia-smi
 
-# Se não funcionar, usar CPU
+# Se não tiver GPU, forçar uso de CPU
 export CUDA_VISIBLE_DEVICES=""
+export OLLAMA_GPU_LAYERS=0
+
+# Reiniciar Ollama
+pkill ollama
+ollama serve &
 ```
 
-### Problema: API não inicia
+---
+
+### ❌ Problema: API não inicia (porta em uso)
 
 ```bash
-# Verificar porta
+# Verificar o que está usando a porta
 lsof -i :8000
+# Ou no Windows:
+# netstat -ano | findstr :8000
 
-# Usar porta diferente
+# Matar processo (se necessário)
+kill -9 <PID>
+
+# Ou usar porta diferente
 uvicorn api.main:app --port 8001
 ```
 
-### Problema: Modelos ML não encontrados
+---
+
+### ❌ Problema: "Sem dados disponíveis"
 
 ```bash
-# Treinar modelos
+# Baixar dados históricos
+python utils/download_historical_data.py
+
+# Ou criar dados de exemplo
+python -c "
+import pandas as pd
+from datetime import datetime, timedelta
+
+# Criar dados de exemplo
+dates = pd.date_range(end=datetime.now(), periods=100, freq='1H')
+data = {
+    'timestamp': dates,
+    'open': 50000,
+    'high': 51000,
+    'low': 49000,
+    'close': 50500,
+    'volume': 1000000
+}
+df = pd.DataFrame(data)
+df.to_parquet('data/historical/BTC_USD_1h.parquet')
+print('✅ Dados de exemplo criados!')
+"
+```
+
+---
+
+### ❌ Problema: Modelos ML não encontrados
+
+**Isso é normal!** Os modelos ML são opcionais. O sistema funciona sem eles.
+
+```bash
+# Se quiser treinar os modelos (opcional):
 python scripts/train_ml_models.py
 
 # Verificar se foram criados
 ls -la data/models/
+
+# O sistema usa fallback se modelos não existirem
+```
+
+---
+
+### ❌ Problema: Permissão negada no Linux
+
+```bash
+# Dar permissão para scripts
+chmod +x scripts/*.sh
+chmod +x scripts/*.py
+
+# Se necessário, usar sudo para Ollama
+sudo curl -fsSL https://ollama.com/install.sh | sh
 ```
 
 ---
