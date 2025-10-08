@@ -1,25 +1,30 @@
-# 🚀 CeciAI - Guia de Deploy
+# 🚀 Deploy em Produção - CeciAI
 
-**Deploy completo em produção**
+**Guia completo para colocar CeciAI em produção.**
+
+> **Nota:** Para instalação local/desenvolvimento, veja [INSTALL.md](../INSTALL.md)
+
+---
+
+## 📋 Índice
+
+1. [Opções de Deploy](#-opções-de-deploy)
+2. [Deploy com Docker](#-deploy-com-docker)
+3. [Deploy Linux Servidor](#-deploy-linux-servidor)
+4. [Configuração de Produção](#-configuração-de-produção)
+5. [Segurança](#-segurança)
+6. [Monitoramento](#-monitoramento)
+7. [Deploy em Cloud](#-deploy-em-cloud)
 
 ---
 
 ## 🎯 Opções de Deploy
 
-### 1. **Docker (Recomendado)** 🐳
-- ✅ Mais fácil e rápido
-- ✅ Isolamento completo
-- ✅ Funciona em qualquer sistema
-
-### 2. **WSL2 Ubuntu** 🐧
-- ✅ Performance nativa Linux
-- ✅ Melhor para desenvolvimento
-- ✅ Acesso direto ao hardware
-
-### 3. **Linux Nativo** 🖥️
-- ✅ Máxima performance
-- ✅ Para servidores dedicados
-- ✅ Produção de alta escala
+| Opção | Uso | Recomendado Para |
+|-------|-----|------------------|
+| **Docker** 🐳 | Containers | Produção pequena/média |
+| **Linux Servidor** 🖥️ | Instalação nativa | Produção alta escala |
+| **Cloud (AWS/GCP)** ☁️ | Infraestrutura gerenciada | Produção profissional |
 
 ---
 
@@ -161,227 +166,36 @@ volumes:
 
 ---
 
-## 🐧 Deploy no WSL2 Ubuntu
+## 🖥️ Deploy Linux Servidor
 
-### 1. Preparar WSL2
+### Instalação em Servidor Linux
 
-```bash
-# No PowerShell (Windows)
-wsl --install Ubuntu-24.04
-wsl --set-default Ubuntu-24.04
-
-# Configurar recursos (.wslconfig)
-# C:\Users\<user>\.wslconfig
-[wsl2]
-memory=24GB
-processors=14
-swap=8GB
-gpuSupport=true
-localhostForwarding=true
-```
-
-### 2. Instalar Dependências
+> **Pré-requisito:** Ter Python, Git e Ollama instalados (veja [INSTALL.md](../INSTALL.md))
 
 ```bash
-# Entrar no WSL2
-wsl
+# 1. Criar usuário para CeciAI
+sudo useradd -r -m -s /bin/bash ceciai
 
-# Atualizar sistema
-sudo apt update && sudo apt upgrade -y
+# 2. Clonar projeto para /opt
+sudo git clone https://github.com/lukeware-digital/ai-invest.git /opt/ceci-ai
+sudo chown -R ceciai:ceciai /opt/ceci-ai
 
-# Python 3.12
-sudo apt install python3.12 python3.12-venv python3-pip -y
-
-# Ferramentas de desenvolvimento
-sudo apt install -y \
-    build-essential \
-    git \
-    curl \
-    wget \
-    software-properties-common
-
-# CUDA (para GPU)
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
-sudo dpkg -i cuda-keyring_1.1-1_all.deb
-sudo apt update
-sudo apt install cuda-toolkit-12-4 -y
-
-# Adicionar ao PATH
-echo 'export PATH=/usr/local/cuda/bin:$PATH' >> ~/.bashrc
-echo 'export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH' >> ~/.bashrc
-source ~/.bashrc
-```
-
-### 3. Instalar CeciAI
-
-```bash
-# Clonar projeto
-cd ~
-mkdir -p workspace
-cd workspace
-git clone <repo-url> ceci-ai
-cd ceci-ai
-
-# Ambiente Python
-python3 -m venv venv
-source venv/bin/activate
-
-# TA-Lib (análise técnica)
-sudo apt install -y libta-lib0-dev ta-lib
-pip install TA-Lib
-
-# Dependências do projeto
-pip install -r requirements.txt
-
-# Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-ollama serve &
-ollama pull llama3.2:3b
-
-# Configurar ambiente
-cp .env.example .env
-# Editar .env conforme necessário
-
-# Testar sistema
-python scripts/test_complete_system.py
-```
-
-### 4. Configurar Serviços
-
-```bash
-# Criar serviço systemd para CeciAI
-sudo tee /etc/systemd/system/ceciai.service << EOF
-[Unit]
-Description=CeciAI Trading System
-After=network.target
-
-[Service]
-Type=simple
-User=$USER
-WorkingDirectory=/home/$USER/workspace/ceci-ai
-Environment=PATH=/home/$USER/workspace/ceci-ai/venv/bin
-ExecStart=/home/$USER/workspace/ceci-ai/venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8000
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Habilitar e iniciar
-sudo systemctl daemon-reload
-sudo systemctl enable ceciai
-sudo systemctl start ceciai
-
-# Verificar status
-sudo systemctl status ceciai
-```
-
-### 5. Scripts de Inicialização
-
-```bash
-# Criar script de startup
-cat > ~/start_ceciai.sh << 'EOF'
-#!/bin/bash
-
-echo "🚀 Iniciando CeciAI..."
-
-# Ativar venv
-cd ~/workspace/ceci-ai
-source venv/bin/activate
-
-# Verificar Ollama
-if ! pgrep -x "ollama" > /dev/null; then
-    echo "Iniciando Ollama..."
-    ollama serve &
-    sleep 5
-fi
-
-# Verificar GPU
-if nvidia-smi > /dev/null 2>&1; then
-    echo "✅ GPU OK: $(nvidia-smi --query-gpu=name --format=csv,noheader)"
-else
-    echo "⚠️  GPU não detectada"
-fi
-
-# Iniciar API
-echo "Iniciando API..."
-uvicorn api.main:app --host 0.0.0.0 --port 8000 &
-
-echo "✅ CeciAI iniciado!"
-echo "API: http://localhost:8000"
-echo "Health: http://localhost:8000/health"
-EOF
-
-chmod +x ~/start_ceciai.sh
-```
-
----
-
-## 🖥️ Deploy Linux Nativo
-
-### Ubuntu/Debian
-
-```bash
-# 1. Atualizar sistema
-sudo apt update && sudo apt upgrade -y
-
-# 2. Python 3.12
-sudo apt install python3.12 python3.12-venv python3-pip -y
-
-# 3. Dependências
-sudo apt install -y \
-    build-essential \
-    git \
-    curl \
-    wget \
-    libta-lib0-dev \
-    ta-lib \
-    nginx \
-    supervisor
-
-# 4. Clonar e configurar projeto
-git clone <repo-url> /opt/ceci-ai
+# 3. Instalar como usuário ceciai
+sudo -u ceciai bash << 'EOF'
 cd /opt/ceci-ai
 python3 -m venv venv
 source venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
+EOF
 
-# 5. Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-ollama serve &
-ollama pull llama3.2:3b
+# 4. Configurar ambiente de produção
+sudo -u ceciai cp /opt/ceci-ai/.env.example /opt/ceci-ai/.env
+# Editar /opt/ceci-ai/.env com configurações de produção
 
-# 6. Configurar
-cp .env.example .env
-# Editar .env para produção
-
-# 7. Testar
-python scripts/test_complete_system.py
-```
-
-### CentOS/RHEL
-
-```bash
-# 1. Atualizar sistema
-sudo dnf update -y
-
-# 2. Python 3.12
-sudo dnf install python3.12 python3.12-pip python3.12-devel -y
-
-# 3. Dependências
-sudo dnf groupinstall "Development Tools" -y
-sudo dnf install git curl wget nginx supervisor -y
-
-# 4. TA-Lib (compilar do source)
-wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
-tar -xzf ta-lib-0.4.0-src.tar.gz
-cd ta-lib/
-./configure --prefix=/usr
-make
-sudo make install
-cd ..
-
-# 5. Continuar com passos similares ao Ubuntu
+# 5. Instalar Nginx e Supervisor
+sudo apt install nginx supervisor -y  # Ubuntu/Debian
+# sudo dnf install nginx supervisor -y  # CentOS/RHEL
 ```
 
 ---
@@ -683,110 +497,38 @@ ssh root@your-droplet-ip
 
 ---
 
-## 🔧 Troubleshooting
+---
 
-### API não inicia
+## ✅ Checklist de Deploy em Produção
 
-```bash
-# Verificar logs
-journalctl -u ceciai-api -n 50
+### Infraestrutura
+- [ ] Servidor com 8GB+ RAM, 4+ cores
+- [ ] Python 3.11+ instalado
+- [ ] Git, Ollama instalados
+- [ ] Firewall configurado (UFW)
+- [ ] SSL/TLS configurado (Let's Encrypt)
 
-# Verificar porta
-sudo lsof -i :8000
+### Aplicação
+- [ ] Código em `/opt/ceci-ai`
+- [ ] Usuário `ceciai` criado
+- [ ] `.env` configurado para produção
+- [ ] Serviços systemd (API + Ollama) criados
+- [ ] Nginx configurado como proxy
 
-# Testar manualmente
-cd /opt/ceci-ai
-source venv/bin/activate
-uvicorn api.main:app --host 127.0.0.1 --port 8000
-```
+### Segurança
+- [ ] Firewall ativo (80, 443, SSH)
+- [ ] SSL funcionando
+- [ ] Logs sendo gravados
 
-### Ollama não responde
-
-```bash
-# Verificar processo
-ps aux | grep ollama
-
-# Reiniciar
-sudo systemctl restart ollama
-
-# Testar conexão
-curl http://localhost:11434/api/tags
-```
-
-### GPU não detectada
-
-```bash
-# Verificar driver NVIDIA
-nvidia-smi
-
-# Verificar CUDA
-nvcc --version
-
-# Reinstalar driver se necessário
-sudo apt purge nvidia-*
-sudo apt install nvidia-driver-535
-sudo reboot
-```
-
-### Performance baixa
-
-```bash
-# Verificar recursos
-htop
-free -h
-df -h
-
-# Verificar swap
-swapon --show
-
-# Otimizar se necessário
-sudo sysctl vm.swappiness=10
-```
+### Validação Final
+- [ ] `curl https://seu-dominio.com/health` retorna 200
+- [ ] Dashboard acessível
+- [ ] Análise funciona sem erros
 
 ---
 
-## ✅ Checklist de Deploy
+**🎉 Produção pronta!**
 
-### Pré-deploy
-- [ ] Hardware compatível (8GB+ RAM, 4+ cores)
-- [ ] Sistema operacional atualizado
-- [ ] Dependências instaladas
-- [ ] GPU configurada (se disponível)
-
-### Deploy
-- [ ] Código clonado e configurado
-- [ ] Ambiente virtual criado
-- [ ] Dependências Python instaladas
-- [ ] Ollama instalado e modelos baixados
-- [ ] Arquivo .env configurado
-- [ ] Testes passando
-
-### Produção
-- [ ] Nginx configurado
-- [ ] SSL/TLS configurado
-- [ ] Firewall configurado
-- [ ] Serviços systemd criados
-- [ ] Logs configurados
-- [ ] Monitoramento ativo
-- [ ] Backups configurados
-
-### Validação
-- [ ] Health check retorna 200 OK
-- [ ] API responde em < 60s
-- [ ] Análise completa funciona
-- [ ] Logs sem erros críticos
-- [ ] Recursos dentro dos limites
-
----
-
-**🎉 Deploy completo! Sistema pronto para produção!** 🚀
-
-**Próximos passos:**
-1. Configurar monitoramento avançado
-2. Implementar alertas
-3. Configurar backups automáticos
-4. Testar com capital real (pequeno)
-5. Escalar conforme necessário
-
-**Versão:** 1.0.0  
-**Última atualização:** 2025-10-08
+**Documentos relacionados:**
+- 📦 [INSTALL.md](../INSTALL.md) - Instalação local/desenvolvimento
+- 🚀 [QUICK_START.md](QUICK_START.md) - Como usar o sistema

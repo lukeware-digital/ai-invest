@@ -1,10 +1,18 @@
-# 📦 O Que Instalar ANTES da Aplicação - CeciAI
+# 📦 Pré-Requisitos e Instalação - CeciAI
 
-**Este documento lista TUDO que você precisa instalar no seu computador antes de rodar a aplicação CeciAI.**
+**Lista completa de tudo que precisa instalar para rodar o CeciAI.**
 
 ---
 
-## 🎯 Lista Completa do Que Precisa Instalar
+## 📋 Índice
+
+1. [Pré-Requisitos](#-pré-requisitos)
+2. [Instalação Local (Desenvolvimento)](#-instalação-local-desenvolvimento)
+3. [Próximos Passos](#-próximos-passos)
+
+---
+
+## 🎯 Pré-Requisitos
 
 ### 1️⃣ Python 3.11+ (OBRIGATÓRIO)
 
@@ -346,9 +354,9 @@ Agora que instalou tudo, vá para:
 
 ---
 
-## ⚡ Instalação Rápida (5 minutos)
+## 🚀 Instalação Local (Desenvolvimento)
 
-### 🚀 Passo a Passo - Sem Docker (RECOMENDADO)
+### Passo a Passo Completo
 
 #### 1️⃣ Clonar Repositório
 
@@ -538,170 +546,9 @@ streamlit run dashboard.py --server.port 8050
 
 ---
 
-## 🐳 Instalação com Docker (Alternativa)
-
-### Pré-requisitos Docker
-
-```bash
-# Verificar instalação
-docker --version
-docker-compose --version
-
-# Se não tiver, instalar:
-# Ubuntu/Debian
-sudo apt-get update
-sudo apt-get install docker.io docker-compose
-
-# Mac
-brew install docker docker-compose
-```
-
-### Comandos Docker
-
-```bash
-# Build e iniciar tudo
-make build
-make up
-
-# Ou manualmente
-docker-compose up -d
-
-# Ver logs
-docker-compose logs -f
-
-# Parar
-docker-compose down
-```
-
----
-
-## 🔧 Configuração Avançada
-
-### Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do projeto:
-
-```bash
-# Ollama
-OLLAMA_HOST=http://localhost:11434
-OLLAMA_MODEL_PRIMARY=llama3.2:3b
-
-# Trading
-INITIAL_CAPITAL=10000
-MAX_DAILY_LOSS=0.03
-MAX_POSITION_SIZE=0.20
-ENABLE_TRADING=false
-
-# CoinAPI (opcional)
-COINAPI_KEY=your-key-here
-COINAPI_MODE=development
-
-# Ambiente
-CECIAI_ENV=development
-LOG_LEVEL=INFO
-```
-
-### Treinar Modelos ML (Opcional)
-
-```bash
-# Treinar modelos LSTM, CNN e XGBoost
-python scripts/train_ml_models.py
-
-# Verificar modelos criados
-ls -la data/models/
-```
-
-**Nota:** O sistema funciona sem os modelos ML (usa fallback).
-
----
-
-## 🧪 Testes
-
-### Teste Rápido
-
-```bash
-# Teste completo
-python scripts/test_complete_system.py
-
-# Teste da API
-python scripts/test_api_live.py
-```
-
-### Testes Unitários
-
-```bash
-# Todos os testes
-pytest tests/ -v
-
-# Teste específico
-pytest tests/test_agents.py -v
-
-# Com cobertura
-pytest tests/ --cov=. --cov-report=html
-```
-
----
-
-## 📊 Uso Básico
-
-### 1. Análise Simples via Python
-
-```python
-import asyncio
-import pandas as pd
-from agents.pipeline import AgentPipeline
-
-async def analyze():
-    # Carregar dados
-    df = pd.read_parquet('data/historical/BTC_USD_1h.parquet')
-    
-    # Executar análise
-    pipeline = AgentPipeline()
-    result = await pipeline.execute(
-        df=df,
-        symbol='BTC/USD',
-        timeframe='1h',
-        capital_available=10000.0
-    )
-    
-    # Ver decisão
-    decision = result['final_decision']
-    print(f"Decisão: {decision['decision']}")
-    print(f"Confiança: {decision['confidence']:.0%}")
-    print(f"Score: {decision['opportunity_score']}/100")
-
-asyncio.run(analyze())
-```
-
-### 2. Análise via API
-
-```bash
-curl -X POST "http://localhost:8000/api/v1/analyze" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "symbol": "BTC/USD",
-    "timeframe": "1h",
-    "strategy": "scalping"
-  }'
-```
-
-### 3. Dashboard Visual
-
-```bash
-streamlit run dashboard.py --server.port 8050
-```
-
-Acesse: http://localhost:8050
-
----
-
 ## ❓ Problemas Comuns
 
-### "❌ Docker Compose não encontrado"
-
-**Solução:** Use instalação sem Docker (método recomendado).
-
-### "❌ Ollama não responde"
+### ❌ Ollama não responde
 
 ```bash
 # Verificar se está rodando
@@ -711,25 +558,7 @@ ollama list
 ollama serve
 ```
 
-### "❌ Sem dados disponíveis"
-
-```bash
-# Criar dados de exemplo
-python -c "
-import pandas as pd
-from datetime import datetime, timedelta
-dates = pd.date_range(end=datetime.now(), periods=100, freq='1H')
-df = pd.DataFrame({
-    'timestamp': dates,
-    'open': 50000, 'high': 51000, 'low': 49000,
-    'close': 50500, 'volume': 1000000
-})
-df.to_parquet('data/historical/BTC_USD_1h.parquet')
-print('✅ Dados criados!')
-"
-```
-
-### "❌ ModuleNotFoundError"
+### ❌ ModuleNotFoundError
 
 ```bash
 # Ativar ambiente virtual
@@ -740,7 +569,7 @@ source .venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 ```
 
-### "❌ Porta 8000 em uso"
+### ❌ Porta 8000 em uso
 
 ```bash
 # Usar porta diferente
@@ -751,38 +580,16 @@ uvicorn api.main:app --port 8001
 
 ## 📚 Próximos Passos
 
-1. ✅ **Sistema instalado** - Parabéns!
-2. 📖 **Ler documentação** - [ARCHITECTURE.md](docs/ARCHITECTURE.md)
-3. 🧪 **Testar API** - [API_USAGE.md](docs/API_USAGE.md)
-4. 💰 **Paper Trading** - Testar com capital virtual
-5. 📊 **Backtesting** - Validar estratégias
-6. 🚀 **Deploy produção** - [DEPLOYMENT.md](docs/DEPLOYMENT.md)
+Após instalação local:
+
+1. ✅ **Desenvolvimento** - Sistema rodando localmente
+2. 📖 **Como usar** - Veja [QUICK_START.md](QUICK_START.md)
+3. 🚀 **Produção** - Deploy completo em [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
 
-## 🆘 Suporte
+**🎉 Instalação completa!**
 
-- **Documentação completa:** [docs/](docs/)
-- **Issues:** https://github.com/lukeware-digital/ai-invest/issues
-- **Quick Start:** [docs/QUICK_START.md](docs/QUICK_START.md)
-
----
-
-## ✅ Checklist Final
-
-- [ ] Python 3.11+ instalado
-- [ ] Ambiente virtual criado e ativado
-- [ ] Dependências instaladas (pip install -r requirements.txt)
-- [ ] Ollama instalado e rodando
-- [ ] Modelo llama3.2:3b baixado (ollama list)
-- [ ] Teste completo passou (python scripts/test_complete_system.py)
-- [ ] API responde (curl http://localhost:8000/health)
-- [ ] Dados históricos disponíveis (opcional)
-
----
-
-**🎉 Pronto! Sistema CeciAI instalado e funcional!**
-
-**Tempo total:** ~10 minutos  
-**Próximo:** [QUICK_START.md](docs/QUICK_START.md) para primeiros usos
+- **Desenvolvimento:** Sistema rodando em http://localhost:8000
+- **Produção:** Consulte [DEPLOYMENT.md](DEPLOYMENT.md)
 

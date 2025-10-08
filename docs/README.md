@@ -1,81 +1,73 @@
 # 📚 CeciAI - Documentação
 
-**Sistema de Trading Inteligente com IA**  
-**Versão:** 1.0.0  
-**Status:** 🟢 Funcional
+**Sistema de Trading Inteligente com IA**
 
 ---
 
-## 📖 Documentação Essencial
+## 📖 Guias Disponíveis
 
-### 🚀 Para Começar
-- **[QUICK_START.md](QUICK_START.md)** - Instalação e primeiros passos (5 minutos)
+### 🚀 Começando
 
-### 🏗️ Arquitetura e Funcionamento  
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Como o sistema funciona
+| Documento | Descrição | Tempo |
+|-----------|-----------|-------|
+| **[INSTALL.md](INSTALL.md)** | Pré-requisitos e dependências | 5 min |
+| **[QUICK_START.md](QUICK_START.md)** | Como fazer rodar | 10 min |
 
-### 📡 Uso da API
-- **[API_USAGE.md](API_USAGE.md)** - Endpoints e exemplos práticos
+### 📚 Entendendo o Sistema
 
-### 🔧 Deploy e Configuração
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Docker, WSL2 e produção
+| Documento | Descrição |
+|-----------|-----------|
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** | Como o sistema funciona |
+| **[API_USAGE.md](API_USAGE.md)** | Endpoints e exemplos práticos |
 
----
+### 🚀 Produção
 
-## 🎯 Navegação Rápida
-
-### "Quero usar o CeciAI agora"
-1. Leia [QUICK_START.md](QUICK_START.md) (5 min)
-2. Execute os comandos de instalação
-3. Teste com [API_USAGE.md](API_USAGE.md)
-
-### "Quero entender como funciona"
-1. Veja [ARCHITECTURE.md](ARCHITECTURE.md)
-2. Consulte exemplos em [API_USAGE.md](API_USAGE.md)
-
-### "Quero fazer deploy"
-1. Siga [DEPLOYMENT.md](DEPLOYMENT.md)
-2. Use [QUICK_START.md](QUICK_START.md) para validar
+| Documento | Descrição |
+|-----------|-----------|
+| **[DEPLOYMENT.md](DEPLOYMENT.md)** | Deploy em produção (Docker, Linux, Cloud) |
 
 ---
 
-## 📊 Status Atual
+## 🎯 Fluxo Recomendado
+
+### Para Desenvolvedores
 
 ```
-✅ Sistema Completo e Funcional
-├── 9 Agentes LLM implementados
-├── 3 Modelos ML treinados  
-├── Pipeline completo funcionando
-├── API REST operacional
-├── Backtesting implementado
-└── Paper trading ativo
+1. INSTALL.md     → Instalar pré-requisitos
+2. QUICK_START.md → Fazer aplicação rodar
+3. API_USAGE.md   → Usar e testar
+4. ARCHITECTURE.md → Entender como funciona
 ```
 
-**O sistema está pronto para uso!** 🚀
+### Para Produção
+
+```
+1. INSTALL.md     → Garantir pré-requisitos
+2. DEPLOYMENT.md  → Deploy em servidor
+3. API_USAGE.md   → Validar funcionamento
+```
 
 ---
 
-## 🎉 Características
+## ⚡ Quick Links
 
-- **🧠 9 Agentes LLM** - Análise inteligente de mercado
-- **🤖 Machine Learning** - LSTM, CNN e XGBoost
-- **📊 Análise Técnica** - 15+ indicadores técnicos
-- **🕯️ Padrões de Candles** - 60+ padrões detectados
-- **💰 Gestão de Capital** - Risco controlado automaticamente
-- **⚡ Performance** - Análise completa em < 30 segundos
-- **🔒 Zero Custo** - 100% local, sem cloud
-- **🐳 Docker Ready** - Deploy em 1 comando
+- 🏠 **[README Principal](../README.md)** - Visão geral do projeto
+- 📦 **[Pré-requisitos](INSTALL.md)** - O que instalar antes
+- 🚀 **[Como rodar](QUICK_START.md)** - Guia passo a passo
+- 🏗️ **[Arquitetura](ARCHITECTURE.md)** - Como funciona
+- 📡 **[API](API_USAGE.md)** - Endpoints e exemplos
+- 🌐 **[Deploy](DEPLOYMENT.md)** - Produção
 
 ---
 
-## 📞 Suporte
+## 📊 Status da Documentação
 
-- **Documentação**: Este diretório
-- **Testes**: `python scripts/test_complete_system.py`
-- **Logs**: `logs/` directory
-- **Issues**: Verifique logs primeiro
+- ✅ **INSTALL.md** - Pré-requisitos e dependências do sistema
+- ✅ **QUICK_START.md** - Guia de instalação e primeiro uso
+- ✅ **ARCHITECTURE.md** - Arquitetura e funcionamento
+- ✅ **API_USAGE.md** - Documentação da API
+- ✅ **DEPLOYMENT.md** - Guia de deploy em produção
 
 ---
 
-**Última atualização:** 2025-10-08  
-**Desenvolvido com ❤️ para trading inteligente**
+**💡 Dica:** Comece pelo [QUICK_START.md](QUICK_START.md) se quiser rodar rapidamente!

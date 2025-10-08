@@ -1,392 +1,301 @@
-# 🤖 CeciAI - Sistema Inteligente de Trading de Criptomoedas
+# 🤖 CeciAI - Sistema Inteligente de Trading com IA
 
-**Versão:** 1.0.0 | **Status:** 🎉 100% COMPLETO (Todas as Fases) | **Data:** 08/10/2025
+**Sistema de análise e trading de criptomoedas usando 9 Agentes LLM especializados**
+
+[![Status](https://img.shields.io/badge/status-funcional-success)](https://github.com/lukeware-digital/ai-invest)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+---
 
 ## 📋 Visão Geral
 
-**CeciAI** é um sistema avançado de análise e trading de criptomoedas que utiliza:
-- ✅ **9 Agentes LLM especializados** (via Ollama - 100% gratuito e local) - **IMPLEMENTADO**
-- ✅ **Pipeline Orchestrator** para coordenação inteligente dos agentes - **IMPLEMENTADO**
-- ✅ **Análise Técnica Completa** (60+ padrões de candlestick, indicadores) - **IMPLEMENTADO**
-- ✅ **CoinAPI** para dados de mercado em tempo real - **IMPLEMENTADO**
-- ✅ **DuckDB + Redis** para armazenamento local ultra-performático (zero custo cloud) - **IMPLEMENTADO**
-- ✅ **Arquitetura assíncrona** para máxima performance - **IMPLEMENTADO**
-- ✅ **Atualização automática** de dados (agendada, configurável) - **IMPLEMENTADO**
-- ✅ **Machine Learning** (LSTM, CNN, XGBoost) para previsões - **IMPLEMENTADO**
-- ✅ **Estratégias de Trading** (Scalping, Swing) validadas - **IMPLEMENTADO**
-- ✅ **Capital Management** com circuit breaker - **IMPLEMENTADO**
-- ✅ **Backtesting e Paper Trading** completos - **IMPLEMENTADO**
+CeciAI é um sistema completo de trading que combina:
 
-### 🎯 Objetivos
+- 🧠 **9 Agentes LLM** especializados (via Ollama - gratuito e local)
+- 📊 **Análise Técnica** completa (60+ padrões de candlestick + 15 indicadores)
+- 🤖 **Machine Learning** (LSTM, CNN, XGBoost)
+- 💰 **Gestão de Capital** com circuit breaker
+- 📈 **Backtesting e Paper Trading**
+- ⚡ **Arquitetura assíncrona** para máxima performance
+- 💾 **DuckDB + Redis** local (zero custo cloud)
 
-- ✅ Análise inteligente de mercado BTC/USD e ETH/USD
-- ✅ Decisões de trading baseadas em IA (9 Agentes LLM)
-- ✅ Identificação do **momento exato** de compra e venda
-- ⏳ Execução automatizada com gestão de risco (em desenvolvimento)
-- ✅ **Zero custo** de infraestrutura (tudo local)
+### 🎯 Objetivo
+
+Identificar o **momento exato** de compra e venda de criptomoedas através de análise inteligente multi-agente.
 
 ---
 
 ## 🚀 Quick Start
 
-### **Instalação em 1 Comando:**
+### Pré-requisitos
+
+- ✅ **Python 3.11+**
+- ✅ **Git**
+- ✅ **Ollama** (LLM local)
+- ✅ **8GB RAM**
+- ✅ **5GB espaço disco**
+
+### Instalação Rápida (5 passos)
 
 ```bash
-make build
+# 1. Clonar repositório
+git clone https://github.com/lukeware-digital/ai-invest.git
+cd ai-invest
+
+# 2. Criar ambiente virtual
+python3 -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
+
+# 3. Instalar dependências
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# 4. Instalar Ollama e modelo
+curl -fsSL https://ollama.com/install.sh | sh  # Linux/Mac
+# Windows: baixar de https://ollama.com/download
+ollama pull llama3.2:3b
+
+# 5. Iniciar aplicação
+uvicorn api.main:app --host 0.0.0.0 --port 8000
 ```
 
-Isso vai:
-1. ✅ Verificar requisitos do sistema
-2. ✅ Criar arquivo `.env` com configurações
-3. ✅ Instalar Ollama (LLM local gratuito)
-4. ✅ Baixar modelos LLM otimizados
-5. ✅ Validar instalação do Ollama
-6. ✅ Buildar imagem Docker
-7. ✅ Subir todos os containers
-8. ✅ Verificar deployment
-9. ✅ Mostrar informações de acesso
-
-**Tempo estimado:** 10-15 minutos (primeira vez)
+✅ **Pronto!** Acesse: http://localhost:8000/docs
 
 ---
 
-## 🏗️ Arquitetura do Sistema
+## 📖 Documentação
+
+| Documento | Descrição |
+|-----------|-----------|
+| **[INSTALL.md](docs/INSTALL.md)** | Pré-requisitos e instalação completa |
+| **[QUICK_START.md](docs/QUICK_START.md)** | Como fazer rodar em 10 minutos |
+| **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Como o sistema funciona |
+| **[API_USAGE.md](docs/API_USAGE.md)** | Endpoints e exemplos de uso |
+| **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** | Deploy em produção |
+
+### Navegação Rápida
+
+- 🚀 **Quero usar agora:** [QUICK_START.md](docs/QUICK_START.md)
+- 🧠 **Quero entender:** [ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- 📡 **Quero integrar:** [API_USAGE.md](docs/API_USAGE.md)
+- 🌐 **Quero fazer deploy:** [DEPLOYMENT.md](docs/DEPLOYMENT.md)
+
+---
+
+## 🏗️ Arquitetura
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        CeciAI Core                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
-│  │  CoinAPI     │───▶│  DuckDB      │───▶│  Redis       │ │
-│  │  (Source)    │    │  (Storage)   │    │  (Cache)     │ │
-│  └──────────────┘    └──────────────┘    └──────────────┘ │
-│         │                    │                    │         │
-│         ▼                    ▼                    ▼         │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │           Data Updater (Scheduler)                   │  │
-│  │  • Atualização a cada 12h (configurável)             │  │
-│  │  • Incremental (apenas dados novos)                  │  │
-│  │  • Backup automático                                 │  │
-│  └──────────────────────────────────────────────────────┘  │
-│         │                                                   │
-│         ▼                                                   │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │           Technical Analysis Layer                    │  │
-│  │  [Indicators] [Candlestick Patterns] [ML Models]     │  │
-│  └──────────────────────────────────────────────────────┘  │
-│         │                                                   │
-│         ▼                                                   │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │           9 Agentes LLM (Ollama Local)               │  │
-│  │  Agent 1-9: Análise → Decisão → Execução            │  │
-│  └──────────────────────────────────────────────────────┘  │
-│         │                                                   │
-│         ▼                                                   │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │           Strategy Execution Layer                    │  │
-│  │  [Scalping] [Swing Trading] [Arbitrage]             │  │
-│  └──────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                    CeciAI Pipeline                      │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  📊 Dados           🧪 Análise         🤖 Decisão      │
+│  ┌──────────┐      ┌──────────┐      ┌──────────┐     │
+│  │ CoinAPI  │─────▶│Technical │─────▶│9 Agentes │     │
+│  │ DuckDB   │      │Analysis  │      │   LLM    │     │
+│  │ Redis    │      │ML Models │      │Pipeline  │     │
+│  └──────────┘      └──────────┘      └──────────┘     │
+│                                             │           │
+│                                             ▼           │
+│                                      ┌──────────┐      │
+│                                      │ Capital  │      │
+│                                      │Management│      │
+│                                      └──────────┘      │
+│                                             │           │
+│                                             ▼           │
+│                                      ┌──────────┐      │
+│                                      │ Strategy │      │
+│                                      │Execution │      │
+│                                      └──────────┘      │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 💾 Armazenamento de Dados (Zero Custo)
+## 🤖 Os 9 Agentes LLM
 
-### **Arquitetura Multi-Camada:**
-
-```
-CoinAPI → Redis (Cache Hot, TTL 5min)
-       ↓
-       → Redis (Cache Permanente, SEM TTL)
-       ↓
-       → DuckDB (Banco principal, arquivo local)
-       ↓
-       → Parquet (Backup comprimido)
-       ↓
-       → JSON (Backup legível)
-```
-
-### **Características:**
-
-- ✅ **Zero custo** (tudo local, sem cloud)
-- ✅ **Alta performance** (DuckDB 100x mais rápido que SQLite)
-- ✅ **Dados nunca expiram** (cache permanente no Redis)
-- ✅ **Backup automático** (múltiplas camadas)
-- ✅ **Atualização agendada** (12h em 12h, configurável)
-- ✅ **Incremental** (baixa apenas dados novos)
-
-**Economia anual:** $230-300 vs soluções cloud! 💰
-
----
-
-## 🤖 Os 9 Agentes LLM Especializados ✅ IMPLEMENTADOS
-
-### **Pipeline de Decisão (Execução Otimizada):**
+### Pipeline de Decisão
 
 ```
 FASE 1: Contexto (Sequencial)
-├── Agent 1: Market Expert (contexto de mercado)
-└── Agent 2: Data Analyzer (qualidade dos dados)
+├── Agent 1: Market Expert       → Contexto de mercado
+└── Agent 2: Data Analyzer       → Qualidade dos dados
 
-FASE 2: Análise Técnica (PARALELO)
-├── Agent 3: Technical Analyst (sinais técnicos)
-└── Agent 4: Candlestick Specialist ⭐ (padrões de candles)
+FASE 2: Análise Técnica (Paralelo)
+├── Agent 3: Technical Analyst   → Indicadores técnicos
+└── Agent 4: Candlestick Expert  → Padrões de candles
 
 FASE 3: Avaliação (Sequencial)
-└── Agent 5: Investment Evaluator (score de oportunidade 0-100)
+└── Agent 5: Investment Evaluator → Score 0-100
 
-FASE 4: Estratégia (PARALELO)
-├── Agent 6: Time Horizon Advisor (timeframe ideal)
-└── Agent 7: Trade Classifier (tipo de operação)
+FASE 4: Estratégia (Paralelo)
+├── Agent 6: Time Horizon Advisor → Timeframe ideal
+└── Agent 7: Trade Classifier     → Tipo de operação
 
 FASE 5: Execução (Condicional)
-├── Agent 8: Day-Trade Executor ⭐ (SE day trade)
-└── Agent 9: Long-Term Executor (SE position trade)
+├── Agent 8: Day-Trade Executor   → SE day trade
+└── Agent 9: Long-Term Executor   → SE position trade
 ```
 
-### **Características do Pipeline:**
+### Características
 
-- ✅ **Execução Paralela**: Agentes 3+4 e 6+7 executam simultaneamente
-- ✅ **Roteamento Inteligente**: Agent 7 decide entre Agent 8 ou 9
-- ✅ **Tratamento de Erros**: Fallbacks e retry automático
-- ✅ **Logging Detalhado**: Rastreamento completo de cada etapa
-- ✅ **Consolidação de Resultados**: Agent 5 unifica todas as análises
-
-### **Modelos LLM Utilizados:**
-
-- `llama3.2:3b` - Principal (2GB RAM, rápido) - **PADRÃO**
-- `llama3.2:1b` - Ultra-rápido (1GB RAM) - Opcional
-- `qwen2.5:3b` - Análise avançada - Opcional
-- `phi3:mini` - Microsoft, otimizado - Opcional
-- `gemma2:2b` - Google, eficiente - Opcional
-
-**Todos 100% gratuitos e rodando localmente via Ollama!**
+- ✅ **Execução Paralela** onde possível
+- ✅ **Roteamento Inteligente** (Agent 7 decide 8 ou 9)
+- ✅ **Tratamento de Erros** com fallbacks
+- ✅ **Logging Detalhado** de cada etapa
 
 ---
 
-## 📊 Atualização Automática de Dados
+## 💻 Uso Básico
 
-### **Data Updater:**
-
-```python
-# Configuração padrão
-updater = DataUpdater(
-    symbols=["BTC/USD", "ETH/USD"],
-    timeframes=["1min", "5min", "1h", "4h", "1d"],
-    update_interval_hours=12,  # A cada 12h
-    start_time="03:00",         # Hora inicial
-    enable_backup=True          # Backup automático
-)
-
-# Iniciar em modo daemon
-await updater.start()
-```
-
-### **Características:**
-
-- ✅ Atualização agendada (padrão: 12h em 12h)
-- ✅ Hora inicial configurável
-- ✅ Atualização incremental (apenas dados novos)
-- ✅ Retry automático em caso de falha
-- ✅ Backup automático após cada atualização
-- ✅ Logs detalhados
-- ✅ Estatísticas de atualização
-
-### **Uso via CLI:**
+### 1. Iniciar Sistema
 
 ```bash
-# Executar uma vez
-python utils/data_updater.py --run-once
+# Ativar ambiente virtual
+source .venv/bin/activate
 
-# Modo daemon (12h em 12h, início às 03:00)
-python utils/data_updater.py --interval 12 --start-time 03:00
+# Iniciar API
+uvicorn api.main:app --host 0.0.0.0 --port 8000
 
-# Personalizado
-python utils/data_updater.py \
-  --symbols BTC/USD ETH/USD \
-  --timeframes 1h 4h 1d \
-  --interval 6 \
-  --start-time 00:00
+# (Opcional) Iniciar Dashboard
+streamlit run dashboard.py --server.port 8050
 ```
 
----
-
-## 🔧 Estrutura de Diretórios
-
-```
-ceci-ai/
-├── 📄 README.md                    # Este arquivo
-├── 📄 Makefile                     # Comandos make
-├── 📄 Dockerfile                   # Imagem Docker
-├── 📄 docker-compose.yml           # Orquestração
-├── 📄 requirements.txt             # Dependências Python
-├── 📄 .env                         # Variáveis de ambiente
-│
-├── 📁 api/                         # API FastAPI
-│   ├── __init__.py
-│   └── main.py                     # Endpoint assíncrono
-│
-├── 📁 agents/                      # Agentes LLM
-│   ├── agent_1_market_expert.py
-│   ├── agent_4_candlestick_specialist.py
-│   ├── agent_8_daytrade_executor.py
-│   └── ml_models/                  # Modelos de Machine Learning
-│       ├── price_predictor.py      # LSTM para previsão
-│       ├── pattern_recognizer.py   # CNN para padrões
-│       └── trade_classifier.py     # XGBoost para classificação
-│
-├── 📁 utils/                       # Utilitários
-│   ├── coinapi_client.py           # Cliente CoinAPI assíncrono
-│   ├── database.py                 # DuckDB + Redis
-│   ├── data_updater.py             # Atualização automática
-│   ├── backup_manager.py           # Backup e recovery
-│   ├── technical_indicators.py     # RSI, MACD, BB, etc
-│   └── candlestick_patterns.py     # Hammer, Doji, etc
-│
-├── 📁 strategies/                  # Estratégias de trading
-│   ├── base_strategy.py
-│   ├── scalping.py
-│   ├── swing_trading.py
-│   └── arbitrage.py
-│
-├── 📁 data/                        # Dados locais
-│   ├── ceciai.duckdb               # Banco principal
-│   ├── historical/                 # Backups Parquet
-│   ├── backups/                    # Backups completos
-│   └── cache/                      # Cache temporário
-│
-├── 📁 scripts/                     # Scripts auxiliares
-│   ├── setup_ollama.sh             # Setup Ollama + modelos
-│   └── docker-entrypoint.sh        # Entrypoint Docker
-│
-├── 📁 tests/                       # Testes (100% coverage)
-│   ├── test_technical_indicators.py
-│   ├── test_coinapi.py
-│   ├── test_agents.py
-│   └── test_strategies.py
-│
-└── 📁 docs/                        # Documentação simplificada
-    ├── README.md                   # Índice da documentação
-    ├── QUICK_START.md              # Instalação e primeiros passos
-    ├── ARCHITECTURE.md             # Como o sistema funciona
-    ├── API_USAGE.md                # Endpoints e exemplos
-    └── DEPLOYMENT.md               # Docker, WSL2 e produção
-```
-
----
-
-## 📚 Documentação Simplificada
-
-A documentação foi **completamente reorganizada** e simplificada:
-
-### **Antes: 12 arquivos** ❌
-- Informações redundantes
-- Documentos desatualizados  
-- Difícil navegação
-- Status inconsistentes
-
-### **Agora: 5 arquivos essenciais** ✅
-- **[docs/QUICK_START.md](docs/QUICK_START.md)** - Instalação em 5 minutos
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Como funciona o sistema
-- **[docs/API_USAGE.md](docs/API_USAGE.md)** - Endpoints e exemplos
-- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Deploy em produção
-- **[docs/README.md](docs/README.md)** - Índice da documentação
-
-### **Navegação Rápida:**
-- 🚀 **Quero usar agora:** [QUICK_START.md](docs/QUICK_START.md)
-- 🧠 **Quero entender:** [ARCHITECTURE.md](docs/ARCHITECTURE.md)  
-- 📡 **Quero integrar:** [API_USAGE.md](docs/API_USAGE.md)
-- 🚀 **Quero fazer deploy:** [DEPLOYMENT.md](docs/DEPLOYMENT.md)
-
----
-
-## 💻 Uso do Sistema
-
-### **1. Iniciar Sistema:**
+### 2. Testar API
 
 ```bash
-make build    # Primeira vez (instala tudo)
-make up       # Iniciar containers
-make logs     # Ver logs
-```
-
-### **2. Testar API:**
-
-```bash
-curl -X POST http://localhost:8000/api/v1/analyze \
-  -H 'Content-Type: application/json' \
+curl -X POST "http://localhost:8000/api/v1/analyze-candles" \
+  -H "Content-Type: application/json" \
   -d '{
     "symbol": "BTC/USD",
-    "timeframe": "1h",
-    "strategy": "scalping",
-    "capital": 10000
+    "candles": [
+      {"timestamp": "2025-10-08T10:00:00Z", "open": 50000, "high": 50200, "low": 49900, "close": 50100, "volume": 1000000},
+      {"timestamp": "2025-10-08T11:00:00Z", "open": 50100, "high": 50300, "low": 50000, "close": 50200, "volume": 1100000}
+    ],
+    "capital_available": 10000
   }'
 ```
 
-### **3. Baixar Dados Históricos:**
+### 3. Uso via Python
 
-```bash
-make download-data
+```python
+import asyncio
+import pandas as pd
+from agents.pipeline import AgentPipeline
 
-# Ou manualmente
-python utils/download_historical_data.py
-```
+async def analyze():
+    # Dados de exemplo
+    df = pd.DataFrame({
+        'timestamp': ['2025-10-08T10:00:00Z', '2025-10-08T11:00:00Z'],
+        'open': [50000, 50100],
+        'high': [50200, 50300],
+        'low': [49900, 50000],
+        'close': [50100, 50200],
+        'volume': [1000000, 1100000]
+    })
+    
+    # Executar análise
+    pipeline = AgentPipeline()
+    result = await pipeline.execute(
+        df=df,
+        symbol='BTC/USD',
+        timeframe='1h',
+        capital_available=10000.0
+    )
+    
+    # Ver decisão
+    decision = result['final_decision']
+    print(f"🎯 Decisão: {decision['decision']}")
+    print(f"📊 Confiança: {decision['confidence']:.0%}")
+    print(f"💰 Valor: ${decision.get('quantity_usd', 0):,.2f}")
 
-### **4. Atualização Automática:**
-
-```bash
-# Já roda automaticamente em background
-# Ver status:
-docker-compose logs -f data-updater
-```
-
-### **5. Comandos Úteis:**
-
-```bash
-make help          # Lista todos os comandos
-make info          # Informações do deployment
-make shell         # Shell no container
-make test          # Rodar testes
-make clean         # Limpar tudo
-make backup        # Criar backup
+asyncio.run(analyze())
 ```
 
 ---
 
-## 📈 Estratégias Implementadas
+## 📊 Funcionalidades Implementadas
 
-### **1. Scalping (5-30 minutos)**
-- **Timeframe:** 1min
-- **Hold Time:** 5-30 minutos
-- **Target:** 0.5-1% de lucro
-- **Stop Loss:** 0.3%
+### ✅ Core
+- [x] 9 Agentes LLM especializados
+- [x] Pipeline Orchestrator
+- [x] API FastAPI assíncrona
+- [x] DuckDB + Redis local
 
-### **2. Swing Trading (1-7 dias)**
-- **Timeframe:** 4h
-- **Hold Time:** 1-7 dias
-- **Target:** 3-5% de lucro
-- **Stop Loss:** 2%
+### ✅ Análise
+- [x] 60+ padrões de candlestick
+- [x] 15+ indicadores técnicos (RSI, MACD, Bollinger, EMA, SMA, ADX, ATR, etc)
+- [x] LSTM para previsão de preços
+- [x] CNN para reconhecimento de padrões
+- [x] XGBoost para classificação
 
-### **3. Arbitrage**
-- **Tipo:** Triangular e Cross-Exchange
-- **Pares:** BTC/USD, ETH/USD, BTC/ETH
-- **Spread Mínimo:** 2%
+### ✅ Trading
+- [x] Estratégia Scalping
+- [x] Estratégia Swing Trading
+- [x] Gestão de Capital com circuit breaker
+- [x] Backtesting Engine
+- [x] Paper Trading real-time
+
+### ✅ Dados
+- [x] CoinAPI client assíncrono
+- [x] Cache multi-camada (Redis + DuckDB)
+- [x] Backup automático
+- [x] Data Updater agendado
 
 ---
 
-## 🛡️ Gestão de Risco (SEMPRE ATIVO)
+## 🔧 Estrutura do Projeto
+
+```
+ceci-ai/
+├── api/                      # API FastAPI
+│   └── main.py               # Endpoints
+├── agents/                   # 9 Agentes LLM
+│   ├── agent_*.py           # Agentes individuais
+│   ├── pipeline.py          # Orchestrator
+│   └── ml_models/           # ML (LSTM, CNN, XGBoost)
+├── strategies/              # Estratégias de trading
+│   ├── scalping.py
+│   └── swing_trading.py
+├── config/                  # Configurações
+│   └── capital_management.py
+├── backtesting/            # Backtesting
+│   ├── backtest_engine.py
+│   └── paper_trading.py
+├── utils/                   # Utilitários
+│   ├── coinapi_client.py
+│   ├── database.py
+│   ├── technical_indicators.py
+│   └── candlestick_patterns.py
+├── data/                    # Dados locais
+│   ├── ceciai.duckdb
+│   └── historical/
+├── docs/                    # Documentação
+│   ├── INSTALL.md
+│   ├── QUICK_START.md
+│   ├── ARCHITECTURE.md
+│   ├── API_USAGE.md
+│   └── DEPLOYMENT.md
+└── dashboard.py            # Dashboard Streamlit
+```
+
+---
+
+## 🛡️ Gestão de Risco
+
+O sistema inclui gestão de risco integrada:
 
 ```python
 RISK_PARAMETERS = {
     "max_daily_loss": 0.03,          # 3% do capital
-    "max_position_size": 0.20,       # 20% por ativo
-    "stop_loss": "MANDATORY",        # Obrigatório
+    "max_position_size": 0.20,       # 20% por posição
+    "stop_loss": "MANDATORY",        # Sempre obrigatório
     "take_profit_ratio": 1.5,        # Mínimo 1.5:1
     "max_concurrent_positions": 5,
     "circuit_breaker": {
-        "consecutive_losses": 3,
+        "consecutive_losses": 3,     # Pausa após 3 perdas
         "pause_duration": "1h"
     }
 }
@@ -394,148 +303,9 @@ RISK_PARAMETERS = {
 
 ---
 
-## 🔑 Variáveis de Ambiente
-
-Arquivo `.env` (criado automaticamente):
-
-```bash
-# Environment
-ENV=development
-LOG_LEVEL=INFO
-
-# CoinAPI
-COINAPI_KEY=your-api-key-here
-COINAPI_MODE=development  # ou production
-
-# Ollama
-OLLAMA_HOST=http://ollama:11434
-OLLAMA_MODEL_PRIMARY=llama3.2:3b
-OLLAMA_MODEL_CODE=llama3.2:1b
-OLLAMA_GPU_ENABLED=true
-OLLAMA_GPU_LAYERS=35
-
-# Trading
-INITIAL_CAPITAL=10000
-MAX_DAILY_LOSS=0.03
-MAX_POSITION_SIZE=0.20
-ENABLE_TRADING=false  # true apenas em produção
-
-# Data Updater
-DATA_UPDATE_INTERVAL=12  # horas
-DATA_UPDATE_START_TIME=03:00
-
-# Hardware
-CPU_CORES=8
-RAM_GB=32
-GPU_ENABLED=true
-GPU_VRAM_GB=8
-```
-
----
-
-## 📊 Monitoramento
-
-### **Health Check:**
-
-```bash
-curl http://localhost:8000/health
-```
-
-### **Estatísticas:**
-
-```bash
-# Via API
-curl http://localhost:8000/api/v1/stats
-
-# Via Python
-python -c "from utils.database import DatabaseManager; \
-  db = DatabaseManager(); \
-  print(db.get_statistics())"
-```
-
-### **Dashboard:**
-
-```bash
-# Iniciar dashboard (opcional)
-python dashboard.py
-
-# Acessar em: http://localhost:8050
-```
-
----
-
-## 🧪 Testes
-
-```bash
-# Todos os testes
-make test
-
-# Testes rápidos
-make test-fast
-
-# Cobertura
-pytest tests/ --cov=. --cov-report=html
-
-# Linter
-make lint
-
-# Formatar código
-make format
-```
-
----
-
-## 📊 Progresso do Projeto
-
-```
-✅ Fase 1: Fundação Técnica         100% ████████████████████
-✅ Fase 2: Agentes Críticos (4, 8)  100% ████████████████████
-✅ Fase 3: Pipeline 9 Agentes       100% ████████████████████
-✅ Fase 4: Modelos ML               100% ████████████████████
-✅ Fase 5: Integração Completa      100% ████████████████████
-✅ Fase 6: Backtesting              100% ████████████████████
-
-TOTAL: 100% ████████████████████████████
-```
-
-### **O que está funcionando AGORA:**
-
-1. ✅ **9 Agentes LLM** - Todos implementados e operacionais
-2. ✅ **Pipeline Orchestrator** - Coordenação inteligente dos agentes
-3. ✅ **Análise Técnica** - 60+ padrões de candlestick + indicadores
-4. ✅ **API FastAPI** - Endpoint `/api/v1/analyze-candles` funcionando
-5. ✅ **DuckDB + Redis** - Armazenamento local performático
-6. ✅ **CoinAPI Client** - Integração com dados de mercado
-7. ✅ **Data Updater** - Atualização automática agendada
-8. ✅ **Modelos ML** - LSTM, CNN, XGBoost treinados e integrados
-9. ✅ **Estratégias** - Scalping e Swing Trading validadas
-10. ✅ **Capital Management** - Gestão completa com circuit breaker
-11. ✅ **Backtesting** - Validação com dados históricos
-12. ✅ **Paper Trading** - Testes em tempo real simulado
-
-### **Sistema 100% Completo! 🎉**
-
-Todas as 6 fases foram implementadas e testadas com sucesso!
-
----
-
-## 📚 Documentação Adicional
-
-- [Arquitetura Detalhada](docs/ARCHITECTURE.md)
-- [Database Architecture](docs/DATABASE_ARCHITECTURE.md)
-- [Gestão de Capital](docs/CAPITAL_MANAGEMENT.md)
-- [Momento Certo de Compra/Venda](docs/MOMENTO_CERTO.md)
-- [Sistema Completo](docs/SISTEMA_COMPLETO.md)
-- [Status do Projeto](docs/STATUS.md) - **ATUALIZADO**
-- [Fase 3 Completa](docs/FASE3_COMPLETA.md) - **NOVO**
-- [Progress Report](docs/PROGRESS_REPORT.md) - **ATUALIZADO**
-- [Como Testar](COMO_TESTAR.md)
-
----
-
 ## 💰 Custos
 
-### **Modo Development (Padrão):**
+### Modo Development (Padrão)
 
 - ✅ Ollama: **Gratuito** (LLM local)
 - ✅ DuckDB: **Gratuito** (banco local)
@@ -544,30 +314,64 @@ Todas as 6 fases foram implementadas e testadas com sucesso!
 
 **Total: $0/mês** 💰
 
-### **Modo Production (Opcional):**
+### Modo Production (Opcional)
 
-- CoinAPI Pro: $79/mês (100k requests/dia)
+- CoinAPI Pro: $79/mês
 - VPS (8GB RAM): $20-40/mês
 
 **Total: ~$100/mês**
-
-**Economia vs Cloud:** $230-300/ano!
 
 ---
 
 ## 🖥️ Hardware Recomendado
 
-### **Mínimo:**
+### Mínimo
 - CPU: 4 cores
 - RAM: 8GB
 - Disco: 20GB SSD
-- GPU: Opcional
 
-### **Recomendado:**
-- CPU: 8+ cores (Ryzen 5800X ou similar)
+### Recomendado
+- CPU: 8+ cores
 - RAM: 16-32GB
 - Disco: 50GB NVMe SSD
-- GPU: NVIDIA RTX 3060 Ti ou superior (8GB VRAM)
+- GPU: NVIDIA (opcional, para acelerar)
+
+---
+
+## 📈 Comandos Úteis
+
+```bash
+# Sistema
+uvicorn api.main:app --reload              # Iniciar API
+streamlit run dashboard.py --server.port 8050  # Dashboard
+
+# Testes
+python scripts/test_complete_system.py     # Teste completo
+python scripts/test_api_live.py            # Teste API
+
+# Dados
+python utils/download_historical_data.py   # Baixar dados
+python utils/data_updater.py               # Atualizar dados
+```
+
+---
+
+## 📊 Status do Projeto
+
+```
+✅ Sistema Core               100% ████████████████████
+✅ 9 Agentes LLM              100% ████████████████████
+✅ Análise Técnica            100% ████████████████████
+✅ Machine Learning           100% ████████████████████
+✅ Gestão de Capital          100% ████████████████████
+✅ Backtesting                100% ████████████████████
+✅ Paper Trading              100% ████████████████████
+✅ Documentação               100% ████████████████████
+
+TOTAL: 100% ██████████████████████████████████████
+```
+
+**🎉 Sistema 100% funcional e pronto para uso!**
 
 ---
 
@@ -579,16 +383,32 @@ Todas as 6 fases foram implementadas e testadas com sucesso!
 
 ## 📝 Licença
 
-MIT License - Veja arquivo LICENSE para detalhes
+MIT License - Veja arquivo [LICENSE](LICENSE) para detalhes
 
 ---
 
-## 📧 Contato
+## 🤝 Contribuindo
 
-Para dúvidas ou sugestões sobre o CeciAI, abra uma issue no GitHub.
+Contribuições são bem-vindas! Por favor:
+
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
 
 ---
 
-**Desenvolvido com ❤️ usando Ollama (gratuito) + CoinAPI + DuckDB**
+## 📧 Suporte
 
-**🚀 Sistema 100% local, zero custo, alta performance!**
+- 📖 **Documentação:** [docs/](docs/)
+- 🐛 **Issues:** [GitHub Issues](https://github.com/lukeware-digital/ai-invest/issues)
+- 💬 **Discussões:** [GitHub Discussions](https://github.com/lukeware-digital/ai-invest/discussions)
+
+---
+
+**Desenvolvido com ❤️ usando Ollama (gratuito) + Python + FastAPI**
+
+**🚀 Sistema 100% local, zero custo cloud, alta performance!**
+
+**Versão:** 1.0.0 | **Última atualização:** 08/10/2025
